@@ -16,7 +16,7 @@ class Model(nn.Module):
     def state_size(self):
         raise NotImplementedError
 
-    def step(self, states, observations):
+    def forward(self, states, observations):
         """
         Run the model for one timestep and return a dict
         of outputs.
@@ -60,7 +60,7 @@ class BaseModel(Model):
     def state_size(self):
         return self._state_size
 
-    def step(self, states, observations):
+    def forward(self, states, observations):
         float_obs = observations.float() / 255.0
         impala_out = self.impala_cnn(float_obs)
         concatenated = torch.cat([impala_out, states], dim=-1)
@@ -111,6 +111,21 @@ class BaseModel(Model):
                 result[t, b] = output.detach().cpu().numpy()
 
         return result
+
+
+class ACModel(BaseModel):
+    def __init__(self, num_actions, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.actor = nn.Linear(256, num_actions)
+        self.critic = nn.Linear(256, 1)
+        for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
+            parameter.zero_()
+
+    def forward(self, states, observations):
+        output = super().forward(states, observations)
+        output['actor'] = self.actor(output['base'])
+        output['critic'] = self.critic(output['base'])
+        return output
 
 
 class ImpalaCNN(nn.Module):
