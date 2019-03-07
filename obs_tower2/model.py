@@ -137,6 +137,7 @@ class ACModel(BaseModel):
 
 class ImpalaCNN(nn.Module):
     def __init__(self, image_size, depth_in):
+        super().__init__()
         layers = []
         for depth_out in [16, 32, 32]:
             layers.append(
