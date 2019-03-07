@@ -18,9 +18,9 @@ class PPO:
 
     def outer_loop(self, roller, save_path='save.pkl', **kwargs):
         for i in itertools.count():
-            terms = self.inner_loop(roller.rollout(), **kwargs)
+            terms, last_terms = self.inner_loop(roller.rollout(), **kwargs)
             print('step %d: clipped=%f entropy=%f explained=%f' %
-                  (i, terms['clip_frac'], terms['entropy'], terms['explained']))
+                  (i, last_terms['clip_frac'], terms['entropy'], terms['explained']))
             torch.save(self.model.state_dict(), save_path)
 
     def inner_loop(self, rollout, num_steps=12, batch_size=None):
@@ -49,7 +49,7 @@ class PPO:
             i += 1
             if i == num_steps:
                 break
-        return first_terms
+        return first_terms, {k: v.item() for k, v in terms.items()}
 
     def _terms(self, model_outs, advs, targets, actions, log_probs):
         vf_loss = torch.mean(torch.pow(model_outs['critic'] - targets, 2))
