@@ -33,7 +33,7 @@ class PPO:
         first_terms = None
         for entries in rollout_batches(rollout, batch_size):
             def choose(values):
-                return self.model.tensor([values[t, b] for t, b in entries])
+                return self.model.tensor(np.array([values[t, b] for t, b in entries]))
             model_outs = self.model(choose(rollout.states), choose(rollout.obses))
             terms = self._terms(model_outs,
                                 choose(advs),

@@ -19,7 +19,7 @@ class Roller:
 
     def reset(self):
         self.batched_env.reset_start()
-        self._prev_obs = self.batched_env.reset_wait()
+        self._prev_obs = np.array(self.batched_env.reset_wait())
         self._prev_states = np.zeros([self.batched_env.num_envs_per_sub_batch,
                                       self.model.state_size],
                                      dtype=np.float32)
