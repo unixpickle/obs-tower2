@@ -42,7 +42,7 @@ class Roller:
             dones[t] = self._prev_dones
             model_out = self.model(self.model.tensor(self._prev_states),
                                    self.model.tensor(self._prev_obs))
-            self.batched_env.step_start(model_out['actions'])
+            self.batched_env.step_start(model_out['actions'].detach().cpu().numpy())
             step_obs, step_rews, step_dones, step_infos = self.batched_env.step_wait()
             self._prev_obs = np.array(step_obs)
             self._prev_dones = np.array(step_dones)
