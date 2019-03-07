@@ -131,8 +131,10 @@ class ACModel(BaseModel):
         output['actor'] = self.actor(output['base'])
         output['critic'] = self.critic(output['base'])
         probs = F.softmax(output['actor'], dim=-1).detach().cpu().numpy()
-        output['actions'] = [np.random.choice(self.num_actions, p=p) for p in probs]
-        output['log_probs'] = [np.log(probs[i, a]) for i, a in enumerate(output['actions'])]
+        output['actions'] = self.torch(np.array(
+            [np.random.choice(self.num_actions, p=p) for p in probs]))
+        output['log_probs'] = self.torch(np.array(
+            [np.log(probs[i, a]) for i, a in enumerate(output['actions'])]))
         return output
 
 
