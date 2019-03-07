@@ -9,7 +9,7 @@ from .rollout import Rollout
 
 class Roller:
     def __init__(self, batched_env, model, num_steps):
-        assert self.batched_env.num_sub_batches == 1, 'multiple sub-batches not supported'
+        assert batched_env.num_sub_batches == 1, 'multiple sub-batches not supported'
         self.batched_env = batched_env
         self.model = model
         self.num_steps = num_steps
