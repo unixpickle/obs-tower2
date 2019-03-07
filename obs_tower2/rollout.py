@@ -51,6 +51,20 @@ class Rollout:
         """
         return np.array([m['values'] for m in self.model_outs], dtype=np.float32)
 
+    def actions(self):
+        """
+        Get the integer actions from the model at each
+        timestep.
+        """
+        return np.array([m['actions'] for m in self.model_outs], dtype=np.int32)
+
+    def log_probs(self):
+        """
+        Get the initial log probabilities from the model
+        at each timestep.
+        """
+        return np.array([m['log_probs'] for m in self.model_outs], dtype=np.float32)
+
     def advantages(self, gamma, lam):
         """
         Generate a [num_steps x batch_size] array of

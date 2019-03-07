@@ -41,6 +41,9 @@ class Model(nn.Module):
         """
         raise NotImplementedError
 
+    def tensor(self, x):
+        return torch.from_numpy(x).to(self.device)
+
 
 class BaseModel(Model):
     """
@@ -128,6 +131,7 @@ class ACModel(BaseModel):
         output['critic'] = self.critic(output['base'])
         probs = F.softmax(output['actor'], dim=-1).detach().cpu().numpy()
         output['actions'] = [np.random.choice(self.num_actions, p=p) for p in probs]
+        output['log_probs'] = [np.log(probs[i, a]) for i, a in enumerate(output['actions'])]
         return output
 
 
