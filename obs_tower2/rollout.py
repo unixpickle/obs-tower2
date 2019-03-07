@@ -32,6 +32,9 @@ class Rollout:
         self.infos = infos
         self.model_outs = model_outs
 
+    def copy(self):
+        return Rollout(self.states, self.obses, self.rews, self.dones, self.infos, self.model_outs)
+
     @property
     def num_steps(self):
         return len(self.rews)
