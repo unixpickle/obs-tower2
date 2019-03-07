@@ -147,7 +147,6 @@ class ImpalaCNN(nn.Module):
                 ImpalaResidual(depth_out),
             ])
             depth_in = depth_out
-        layers.append(nn.Flatten)
         self.conv_layers = nn.Sequential(*layers)
         self.linear = nn.Linear((image_size // 8) ** 2 * depth_in, 256)
 
