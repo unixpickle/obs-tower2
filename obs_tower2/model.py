@@ -116,6 +116,7 @@ class BaseModel(Model):
 class ACModel(BaseModel):
     def __init__(self, num_actions, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.num_actions = num_actions
         self.actor = nn.Linear(256, num_actions)
         self.critic = nn.Linear(256, 1)
         for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
@@ -125,7 +126,8 @@ class ACModel(BaseModel):
         output = super().forward(states, observations)
         output['actor'] = self.actor(output['base'])
         output['critic'] = self.critic(output['base'])
-        # TODO: sample action here.
+        probs = F.softmax(output['actor'], dim=-1).detach().cpu().numpy()
+        output['actions'] = [np.random.choice(self.num_actions, p=p) for p in probs]
         return output
 
 
