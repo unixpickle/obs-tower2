@@ -140,12 +140,12 @@ class ImpalaCNN(nn.Module):
         super().__init__()
         layers = []
         for depth_out in [16, 32, 32]:
-            layers.append(
+            layers.extend([
                 nn.Conv2d(depth_in, depth_out, 3, padding=1),
                 nn.MaxPool2d(3, stride=2, padding=1),
                 ImpalaResidual(depth_out),
                 ImpalaResidual(depth_out),
-            )
+            ])
             depth_in = depth_out
         layers.append(nn.Flatten)
         self.conv_layers = nn.Sequential(*layers)
