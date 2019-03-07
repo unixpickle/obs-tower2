@@ -59,7 +59,7 @@ class PPO:
         new_log_probs = -F.cross_entropy(model_outs['actor'], actions.long(), reduction='none')
         ratio = torch.exp(new_log_probs - log_probs)
         clip_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
-        pi_loss = torch.mean(torch.min(ratio * advs, clip_ratio * advs))
+        pi_loss = -torch.mean(torch.min(ratio * advs, clip_ratio * advs))
         clip_frac = torch.mean(torch.gt(ratio * advs, clip_ratio * advs).float())
 
         all_probs = torch.log_softmax(model_outs['actor'], dim=-1)
