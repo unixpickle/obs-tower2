@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import torch
 import torch.nn as nn
@@ -148,7 +149,7 @@ class ImpalaCNN(nn.Module):
             ])
             depth_in = depth_out
         self.conv_layers = nn.Sequential(*layers)
-        self.linear = nn.Linear((image_size // 8) ** 2 * depth_in, 256)
+        self.linear = nn.Linear(math.ceil(image_size / 8) ** 2 * depth_in, 256)
 
     def forward(self, x):
         x = x.permute(0, 3, 1, 2).contiguous()
