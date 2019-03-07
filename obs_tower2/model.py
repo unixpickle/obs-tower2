@@ -136,7 +136,7 @@ class ACModel(BaseModel):
     def forward(self, states, observations):
         output = super().forward(states, observations)
         output['actor'] = self.actor(output['base'])
-        output['critic'] = self.critic(output['base'])
+        output['critic'] = self.critic(output['base']).view(-1)
         torch_probs = F.softmax(output['actor'], dim=-1)
         probs = torch_probs.detach().cpu().numpy()
         output['actions'] = self.tensor(np.array(
