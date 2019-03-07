@@ -27,7 +27,7 @@ class PPO:
         if batch_size is None:
             batch_size = rollout.num_steps * rollout.batch_size
         advs = rollout.advantages(self.gamma, self.lam)
-        targets = advs + rollout.value_predictions()[..., :-1]
+        targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
         i = 0
