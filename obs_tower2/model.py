@@ -132,7 +132,7 @@ class ACModel(BaseModel):
         output['critic'] = self.critic(output['base'])
         torch_probs = F.softmax(output['actor'], dim=-1)
         probs = torch_probs.detach().cpu().numpy()
-        output['actions'] = self.torch(np.array(
+        output['actions'] = self.tensor(np.array(
             [np.random.choice(self.num_actions, p=p) for p in probs]))
         output['log_probs'] = torch.stack([torch_probs[i, a] for i, a
                                            in enumerate(output['actions'])])
