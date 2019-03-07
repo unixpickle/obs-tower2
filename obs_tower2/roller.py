@@ -40,23 +40,17 @@ class Roller:
             states[t] = self._prev_states
             obses[t] = self._prev_obs
             dones[t] = self._prev_dones
-            model_out = self.model(self.model.tensor(self._prev_states),
-                                   self.model.tensor(self._prev_obs))
-            self.batched_env.step_start(model_out['actions'].detach().cpu().numpy())
+            model_out = self.model.step(self._prev_states, self._prev_obs)
+            self.batched_env.step_start(model_out['actions'])
             step_obs, step_rews, step_dones, step_infos = self.batched_env.step_wait()
             self._prev_obs = np.array(step_obs)
             self._prev_dones = np.array(step_dones)
-            self._prev_states = model_out['states'].detach().cpu().numpy()
+            self._prev_states = model_out['states']
             rews[t] = np.array(step_rews)
             infos.append(step_infos)
-            model_outs.append(numpy_model_out(model_out))
+            model_outs.append(model_out)
         states[-1] = self._prev_states
         obses[-1] = self._prev_obs
         dones[-1] = self._prev_dones
-        model_outs.append(numpy_model_out(self.model(self.model.tensor(self._prev_states),
-                                                     self.model.tensor(self._prev_obs))))
+        model_outs.append(self.model.step(self._prev_states, self._prev_obs))
         return Rollout(states, obses, rews, dones, infos, model_outs)
-
-
-def numpy_model_out(m):
-    return {k: v.detach().cpu().numpy() for k, v in m.items()}

@@ -31,6 +31,13 @@ class Model(nn.Module):
         """
         raise NotImplementedError
 
+    def step(self, states, observations):
+        """
+        Like forward() but with numpy arrays.
+        """
+        res = self.forward(self.tensor(states), self.tensor(observations))
+        return {k: v.detach().cpu().numpy() for k, v in res.items()}
+
     def add_states(self, rollout):
         """
         Run the model on the rollout and create a new
