@@ -49,7 +49,7 @@ class Rollout:
         Get the value predictions from the model at each
         timestep.
         """
-        return np.array([m['values'] for m in self.model_outs], dtype=np.float32)
+        return np.array([m['critic'] for m in self.model_outs], dtype=np.float32)
 
     def actions(self):
         """
