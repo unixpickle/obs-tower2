@@ -45,7 +45,8 @@ class Roller:
             step_obs, step_rews, step_dones, step_infos = self.batched_env.step_wait()
             self._prev_obs = np.array(step_obs)
             self._prev_dones = np.array(step_dones)
-            self._prev_states = model_out['states']
+            self._prev_states = (model_out['states'] *
+                                 (1 - self._prev_dones[:, None].astype(np.float32)))
             rews[t] = np.array(step_rews)
             infos.append(step_infos)
             model_outs.append(model_out)
