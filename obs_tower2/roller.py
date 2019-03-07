@@ -43,12 +43,12 @@ class Roller:
             model_out = self.model(self.model.tensor(self._prev_states),
                                    self.model.tensor(self._prev_obs))
             self.batched_env.step_start(model_out['actions'])
-            obs, rews, dones, infos = self.batched_env.step_wait()
-            self._prev_obs = np.array(obs)
-            self._prev_dones = np.array(dones)
+            step_obs, step_rews, step_dones, step_infos = self.batched_env.step_wait()
+            self._prev_obs = np.array(step_obs)
+            self._prev_dones = np.array(step_dones)
             self._prev_states = model_out['states'].detach().cpu().numpy()
-            rews[t] = np.array(rews)
-            infos.append(infos)
+            rews[t] = np.array(step_rews)
+            infos.append(step_infos)
             model_outs.append(numpy_model_out(model_out))
         states[-1] = self._prev_states
         obses[-1] = self._prev_obs
