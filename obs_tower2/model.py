@@ -123,7 +123,7 @@ class ACModel(BaseModel):
         self.actor = nn.Linear(256, num_actions)
         self.critic = nn.Linear(256, 1)
         for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
-            parameter.zero_()
+            parameter.data.zero_()
 
     def forward(self, states, observations):
         output = super().forward(states, observations)
