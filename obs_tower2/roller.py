@@ -53,7 +53,8 @@ class Roller:
         states[-1] = self._prev_states
         obses[-1] = self._prev_obs
         dones[-1] = self._prev_dones
-        model_outs.append(numpy_model_out(self.model(self._prev_states, self._prev_obs)))
+        model_outs.append(numpy_model_out(self.model(self.model.tensor(self._prev_states),
+                                                     self.model.tensor(self._prev_obs))))
         return Rollout(states, obses, rews, dones, infos, model_outs)
 
 
