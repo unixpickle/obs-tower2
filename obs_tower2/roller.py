@@ -33,7 +33,7 @@ class Roller:
         obses = np.zeros((self.num_steps + 1, batch) + self.batched_env.observation_space.shape,
                          dtype=self.batched_env.observation_space.dtype)
         rews = np.zeros([self.num_steps, batch], dtype=np.float32)
-        dones = np.array([self.num_steps + 1, batch], dtype=np.bool)
+        dones = np.zeros([self.num_steps + 1, batch], dtype=np.bool)
         infos = []
         model_outs = []
         for t in range(self.num_steps):
