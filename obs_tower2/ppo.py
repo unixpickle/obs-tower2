@@ -1,8 +1,9 @@
 import itertools
 import random
 
+import numpy as np
 import torch
-import torch.functional as F
+import torch.nn.functional as F
 import torch.optim as optim
 
 
@@ -26,14 +27,14 @@ class PPO:
         if batch_size is None:
             batch_size = rollout.num_steps * rollout.batch_size
         advs = rollout.advantages(self.gamma, self.lam)
-        targets = advs + rollout.value_predictions()
+        targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
         i = 0
         first_terms = None
         for entries in rollout_batches(rollout, batch_size):
             def choose(values):
-                return self.model.tensor([values[t, b] for t, b in entries])
+                return self.model.tensor(np.array([values[t, b] for t, b in entries]))
             model_outs = self.model(choose(rollout.states), choose(rollout.obses))
             terms = self._terms(model_outs,
                                 choose(advs),
@@ -55,7 +56,7 @@ class PPO:
         variance = torch.var(targets)
         explained = 1 - vf_loss / variance
 
-        new_log_probs = F.cross_entropy(model_outs['actor'], actions)
+        new_log_probs = F.cross_entropy(model_outs['actor'], actions.long())
         ratio = torch.exp(new_log_probs - log_probs)
         clip_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
         pi_loss = torch.mean(torch.min(ratio * advs, clip_ratio * advs))

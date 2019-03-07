@@ -1,7 +1,8 @@
+import math
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 
 
 class Model(nn.Module):
@@ -29,6 +30,13 @@ class Model(nn.Module):
             A dict of Tensors.
         """
         raise NotImplementedError
+
+    def step(self, states, observations):
+        """
+        Like forward() but with numpy arrays.
+        """
+        res = self.forward(self.tensor(states), self.tensor(observations))
+        return {k: v.detach().cpu().numpy() for k, v in res.items()}
 
     def add_states(self, rollout):
         """
@@ -123,34 +131,38 @@ class ACModel(BaseModel):
         self.actor = nn.Linear(256, num_actions)
         self.critic = nn.Linear(256, 1)
         for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
-            parameter.zero_()
+            parameter.data.zero_()
 
     def forward(self, states, observations):
         output = super().forward(states, observations)
         output['actor'] = self.actor(output['base'])
-        output['critic'] = self.critic(output['base'])
-        probs = F.softmax(output['actor'], dim=-1).detach().cpu().numpy()
-        output['actions'] = [np.random.choice(self.num_actions, p=p) for p in probs]
-        output['log_probs'] = [np.log(probs[i, a]) for i, a in enumerate(output['actions'])]
+        output['critic'] = self.critic(output['base']).view(-1)
+        torch_probs = F.softmax(output['actor'], dim=-1)
+        probs = torch_probs.detach().cpu().numpy()
+        output['actions'] = self.tensor(np.array(
+            [np.random.choice(self.num_actions, p=p) for p in probs]))
+        output['log_probs'] = torch.stack([torch_probs[i, a] for i, a
+                                           in enumerate(output['actions'])])
         return output
 
 
 class ImpalaCNN(nn.Module):
     def __init__(self, image_size, depth_in):
+        super().__init__()
         layers = []
         for depth_out in [16, 32, 32]:
-            layers.append(
+            layers.extend([
                 nn.Conv2d(depth_in, depth_out, 3, padding=1),
                 nn.MaxPool2d(3, stride=2, padding=1),
                 ImpalaResidual(depth_out),
                 ImpalaResidual(depth_out),
-            )
+            ])
             depth_in = depth_out
-        layers.append(nn.Flatten)
         self.conv_layers = nn.Sequential(*layers)
-        self.linear = nn.Linear((image_size // 8) ** 2 * depth_in, 256)
+        self.linear = nn.Linear(math.ceil(image_size / 8) ** 2 * depth_in, 256)
 
     def forward(self, x):
+        x = x.permute(0, 3, 1, 2).contiguous()
         x = self.conv_layers(x)
         x = F.relu(x)
         x = x.view(x.shape[0], -1)
@@ -161,6 +173,7 @@ class ImpalaCNN(nn.Module):
 
 class ImpalaResidual(nn.Module):
     def __init__(self, depth):
+        super().__init__()
         self.conv1 = nn.Conv2d(depth, depth, 3, padding=1)
         self.conv2 = nn.Conv2d(depth, depth, 3, padding=1)
 

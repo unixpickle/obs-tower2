@@ -1,3 +1,5 @@
+import os
+
 import torch
 
 from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH
@@ -19,7 +21,8 @@ GAE_GAMMA = 0.9975
 def main():
     env = create_batched_env(NUM_ENVS)
     model = ACModel(54, IMAGE_SIZE, IMAGE_DEPTH)
-    model.load_state_dict(torch.load('save.pkl'))
+    if os.path.exists('save.pkl'):
+        model.load_state_dict(torch.load('save.pkl'))
     model.to(torch.device('cuda'))
     roller = Roller(env, model, HORIZON)
     ppo = PPO(model, gamma=GAE_GAMMA, lam=GAE_LAM, lr=LR, ent_reg=ENTROPY_REG)
