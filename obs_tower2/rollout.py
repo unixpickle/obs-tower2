@@ -21,7 +21,8 @@ class Rollout:
         actions: actions from the policy.
         states: output states from the network.
 
-    Members have shape [num_steps x batch_size x ...].
+    Members have shape [num_steps x batch_size x ...] or
+    [(num_steps + 1) x batch_size x ...].
     """
 
     def __init__(self, states, obses, rews, dones, infos, model_outs):
