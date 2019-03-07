@@ -151,6 +151,7 @@ class ImpalaCNN(nn.Module):
         self.linear = nn.Linear((image_size // 8) ** 2 * depth_in, 256)
 
     def forward(self, x):
+        x = x.permute(0, 3, 1, 2).contiguous()
         x = self.conv_layers(x)
         x = F.relu(x)
         x = x.view(x.shape[0], -1)
