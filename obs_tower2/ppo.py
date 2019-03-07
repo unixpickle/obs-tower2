@@ -56,7 +56,7 @@ class PPO:
         variance = torch.var(targets)
         explained = 1 - vf_loss / variance
 
-        new_log_probs = F.cross_entropy(model_outs['actor'], actions)
+        new_log_probs = F.cross_entropy(model_outs['actor'], actions.long())
         ratio = torch.exp(new_log_probs - log_probs)
         clip_ratio = torch.clamp(ratio, 1 - self.epsilon, 1 + self.epsilon)
         pi_loss = torch.mean(torch.min(ratio * advs, clip_ratio * advs))
