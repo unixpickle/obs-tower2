@@ -8,7 +8,7 @@ from obs_tower2.ppo import PPO
 from obs_tower2.roller import Roller
 from obs_tower2.util import create_batched_env
 
-NUM_ENVS = 8
+NUM_ENVS = 2
 HORIZON = 512
 BATCH_SIZE = NUM_ENVS * HORIZON / 8
 LR = 1e-4
