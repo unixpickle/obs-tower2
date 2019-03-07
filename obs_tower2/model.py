@@ -125,6 +125,7 @@ class ACModel(BaseModel):
         output = super().forward(states, observations)
         output['actor'] = self.actor(output['base'])
         output['critic'] = self.critic(output['base'])
+        # TODO: sample action here.
         return output
 
 
