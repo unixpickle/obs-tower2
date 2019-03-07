@@ -85,8 +85,32 @@ class BaseModel(Model):
         return result
 
     def _impala_outs(self, rollout):
-        # TODO: this.
-        return np.zeros([rollout.num_steps, rollout.batch_size, 256], dtype=np.float32)
+        batch_size = 128
+
+        def image_samples():
+            for t in range(rollout.num_steps):
+                for b in range(rollout.batch_size):
+                    yield (t, b)
+
+        def image_batches():
+            batch = []
+            for x in image_samples():
+                batch.append(x)
+                if len(batch) == batch_size:
+                    yield batch
+                    batch = []
+            if len(batch):
+                yield batch
+
+        result = np.zeros([rollout.num_steps, rollout.batch_size, 256], dtype=np.float32)
+        for batch in image_batches():
+            images = np.array([rollout.obses[t, b] for t, b in batch])
+            float_obs = torch.from_numpy(images).float() / 255.0
+            outputs = self.impala_cnn(float_obs.to(self.device))
+            for (t, b), output in zip(batch, outputs):
+                result[t, b] = output.detach().cpu().numpy()
+
+        return result
 
 
 class ImpalaCNN(nn.Module):
