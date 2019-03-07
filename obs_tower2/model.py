@@ -162,6 +162,7 @@ class ImpalaCNN(nn.Module):
 
 class ImpalaResidual(nn.Module):
     def __init__(self, depth):
+        super().__init__()
         self.conv1 = nn.Conv2d(depth, depth, 3, padding=1)
         self.conv2 = nn.Conv2d(depth, depth, 3, padding=1)
 
