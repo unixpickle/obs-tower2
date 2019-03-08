@@ -123,7 +123,7 @@ class BaseModel(Model):
             if len(batch):
                 yield batch
 
-        result = np.zeros([rollout.num_steps, rollout.batch_size, 256], dtype=np.float32)
+        result = np.zeros([rollout.num_steps + 1, rollout.batch_size, 256], dtype=np.float32)
         for batch in image_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
             float_obs = torch.from_numpy(images).float() / 255.0
