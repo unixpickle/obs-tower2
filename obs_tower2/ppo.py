@@ -49,9 +49,13 @@ class PPO:
         return first_terms, last_terms
 
     def _terms(self, model_outs, advs, targets, actions, log_probs):
+        scale = 1 / (1e-8 + torch.std(advs))
+        advs = (advs - torch.mean(advs)) * scale
+
         vf_loss = torch.mean(torch.pow(model_outs['critic'] - targets, 2))
         variance = torch.var(targets)
         explained = 1 - vf_loss / variance
+        vf_loss = vf_loss * scale
 
         new_log_probs = -F.cross_entropy(model_outs['actor'], actions.long(), reduction='none')
         ratio = torch.exp(new_log_probs - log_probs)
