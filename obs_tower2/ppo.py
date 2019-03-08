@@ -1,5 +1,4 @@
 import itertools
-import random
 
 import numpy as np
 import torch
@@ -30,9 +29,9 @@ class PPO:
         targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
-        i = 0
         first_terms = None
-        for entries in rollout_batches(rollout, batch_size):
+        last_terms = None
+        for entries in rollout.batches(batch_size, num_steps):
             def choose(values):
                 return self.model.tensor(np.array([values[t, b] for t, b in entries]))
             model_outs = self.model(choose(rollout.states), choose(rollout.obses))
@@ -44,12 +43,10 @@ class PPO:
             self.optimizer.zero_grad()
             terms['loss'].backward()
             self.optimizer.step()
-            if not i:
-                first_terms = {k: v.item() for k, v in terms.items()}
-            i += 1
-            if i == num_steps:
-                break
-        return first_terms, {k: v.item() for k, v in terms.items()}
+            last_terms = {k: v.item() for k, v in terms.items()}
+            if first_terms is None:
+                first_terms = last_terms
+        return first_terms, last_terms
 
     def _terms(self, model_outs, advs, targets, actions, log_probs):
         vf_loss = torch.mean(torch.pow(model_outs['critic'] - targets, 2))
@@ -75,23 +72,3 @@ class PPO:
 
     def _tensor(self, x):
         return torch.from_numpy(x).to(self.model.device)
-
-
-def rollout_batches(rollout, batch_size):
-    batch = []
-    for entry in rollout_entries(rollout):
-        batch.append(entry)
-        if len(batch) == batch_size:
-            yield batch
-            batch = []
-
-
-def rollout_entries(rollout):
-    entries = []
-    for t in range(rollout.num_steps):
-        for b in range(rollout.batch_size):
-            entries.append((t, b))
-    while True:
-        random.shuffle(entries)
-        for entry in entries:
-            yield entry

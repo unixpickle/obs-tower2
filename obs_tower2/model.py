@@ -153,6 +153,21 @@ class ACModel(BaseModel):
         output['log_probs'] = torch.stack([log_probs[i, a] for i, a in enumerate(actions)])
 
 
+class DiscriminatorModel(BaseModel):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.discriminator = nn.Linear(256, 1)
+        for parameter in self.discriminator.parameters():
+            parameter.data.zero_()
+
+    def add_fields(self, output):
+        output['logits'] = self.discriminator(output['base']).view(-1)
+        log_disc = F.logsigmoid(output['logits'])
+        log_neg_disc = F.logsigmoid(output['logits'])
+        output['prob_pi'] = torch.mean(log_disc)
+        output['prob_expert'] = torch.mean(log_neg_disc)
+
+
 class ImpalaCNN(nn.Module):
     def __init__(self, image_size, depth_in):
         super().__init__()

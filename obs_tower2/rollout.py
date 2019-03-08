@@ -2,6 +2,8 @@
 Storing and manipulating trajectories from an agent.
 """
 
+import random
+
 import numpy as np
 
 
@@ -81,3 +83,26 @@ class Rollout:
             result[t] = current
             current *= (1 - self.dones[t])
         return result
+
+    def batches(self, batch_size, count):
+        """
+        Yield `count` batches, where each batch is a list
+        of (timestep, batch_idx) tuples.
+        """
+        entries = self.entries()
+        for _ in range(count):
+            yield [next(entries) for _ in range(batch_size)]
+
+    def entries(self):
+        """
+        Yield an infinite and shuffled list of
+        (timestep, batch_idx) tuples.
+        """
+        entries = []
+        for t in range(self.num_steps):
+            for b in range(self.batch_size):
+                entries.append((t, b))
+        while True:
+            random.shuffle(entries)
+            for entry in entries:
+                yield entry
