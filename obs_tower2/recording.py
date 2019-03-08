@@ -1,12 +1,16 @@
 import functools
 import json
 import os
+import random
 
 from PIL import Image
 import numpy as np
 
+from .constants import IMAGE_SIZE, IMAGE_DEPTH
+from .rollout import Rollout
 
-def load_data(dirpath=None, require_door_open=False):
+
+def load_data(dirpath=None):
     if dirpath is None:
         dirpath = os.environ['OBS_TOWER_RECORDINGS']
     training = []
@@ -18,13 +22,32 @@ def load_data(dirpath=None, require_door_open=False):
         if not os.path.exists(os.path.join(path, 'actions.json')):
             continue
         recording = Recording(path)
-        if require_door_open and recording.door_open is None:
-            continue
         if recording.seed < 25:
             testing.append(recording)
         else:
             training.append(recording)
     return training, testing
+
+
+def recording_rollout(recordings, batch, horizon):
+    """
+    Create a rollout of segments from recordings.
+    """
+    rollout = Rollout(states=np.zeros([horizon, batch, 0], dtype=np.float32),
+                      obses=np.zeros([horizon, batch, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH],
+                                     dtype=np.uint8),
+                      rews=np.zeros([horizon, batch], dtype=np.float32),
+                      dones=np.zeros([horizon, batch], dtype=np.float32),
+                      infos=[[{} for _ in range(batch)] for _ in range(horizon)],
+                      model_outs=[{'actions': [None] * batch} for _ in range(horizon)])
+    for b in range(batch):
+        recording = random.choice(recordings)
+        t0 = random.randrange(recording.num_steps - horizon)
+        for t in range(t0, t0 + horizon):
+            rollout.obses[t, b] = recording.observation(t)
+            rollout.rews[t, b] = recording.rewards[t]
+            rollout.model_outs[t]['actions'][b] = recording.actions[t]
+    return rollout
 
 
 class Recording:
