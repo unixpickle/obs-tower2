@@ -44,9 +44,9 @@ def recording_rollout(recordings, batch, horizon):
         recording = random.choice(recordings)
         t0 = random.randrange(recording.num_steps - horizon)
         for t in range(t0, t0 + horizon):
-            rollout.obses[t, b] = recording.observation(t)
-            rollout.rews[t, b] = recording.rewards[t]
-            rollout.model_outs[t]['actions'][b] = recording.actions[t]
+            rollout.obses[t - t0, b] = recording.observation(t)
+            rollout.rews[t - t0, b] = recording.rewards[t]
+            rollout.model_outs[t - t0]['actions'][b] = recording.actions[t]
     return rollout
 
 
