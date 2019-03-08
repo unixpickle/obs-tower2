@@ -10,7 +10,7 @@ from .recording import recording_rollout
 class GAIL:
     def __init__(self, discriminator, lr=1e-4):
         self.discriminator = discriminator
-        self.optimizer = optim.Adam(lr=lr)
+        self.optimizer = optim.Adam(discriminator.parameters(), lr=lr)
 
     def outer_loop(self,
                    ppo,
