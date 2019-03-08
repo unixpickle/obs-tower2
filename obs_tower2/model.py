@@ -100,7 +100,7 @@ class BaseModel(Model):
         for t in range(rollout.num_steps):
             impala_batch = self.tensor(impala_outs[t])
             model_outs = self._forward_with_impala(states, impala_batch)
-            states = model_outs['states'] * (1 - result.dones[t + 1])
+            states = model_outs['states'] * self.tensor(1 - result.dones[t + 1])
             result.states[t + 1] = states.detach().cpu().numpy()
         result.model_outs.append(self._forward_with_impala(states, self.tensor(impala_outs[-1])))
         return result
