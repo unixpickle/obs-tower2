@@ -19,7 +19,7 @@ def main():
         obs = env.reset()
         state = np.zeros([1, model.state_size], dtype=np.float32)
         while True:
-            output = model.step(np.array([obs]), state)
+            output = model.step(state, np.array([obs]))
             obs, rew, done, info = env.step(output['actions'][0])
             yield big_obs(obs[..., -3:], info)
             state = output['states']
