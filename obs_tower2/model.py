@@ -197,7 +197,7 @@ class MaskedCNN(ImpalaCNN):
     def forward(self, x):
         mask = np.ones(x.shape[1:], dtype=np.float32)
         mask[6:10] = 0.0
-        return super().forward(self.tensor(mask) * x)
+        return super().forward(torch.from_numpy(mask).to(x.device) * x)
 
 
 class ImpalaResidual(nn.Module):
