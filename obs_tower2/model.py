@@ -59,10 +59,10 @@ class BaseModel(Model):
     IMPALA-based echo-state network.
     """
 
-    def __init__(self, image_size, depth_in, state_size=256):
+    def __init__(self, image_size, depth_in, state_size=256, cnn_class=None):
         super().__init__()
         self._state_size = state_size
-        self.impala_cnn = ImpalaCNN(image_size, depth_in)
+        self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
         self.state_transition = nn.Linear(state_size + 256, state_size)
         self.state_norm = nn.LayerNorm((state_size,))
         self.state_mixer = nn.Linear(state_size + 256, 256)
@@ -155,7 +155,7 @@ class ACModel(BaseModel):
 
 class DiscriminatorModel(BaseModel):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, cnn_class=MaskedCNN)
         self.discriminator = nn.Linear(256, 1)
         for parameter in self.discriminator.parameters():
             parameter.data.zero_()
@@ -191,6 +191,13 @@ class ImpalaCNN(nn.Module):
         x = self.linear(x)
         x = F.relu(x)
         return x
+
+
+class MaskedCNN(ImpalaCNN):
+    def forward(self, x):
+        mask = np.ones(x.shape[1:], dtype=np.float32)
+        mask[6:10] = 0.0
+        return super().forward(self.tensor(mask) * x)
 
 
 class ImpalaResidual(nn.Module):
