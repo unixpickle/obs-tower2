@@ -47,7 +47,9 @@ def recording_rollout(recordings, batch, horizon):
             rollout.obses[t - t0, b] = recording.observation(t)
             rollout.rews[t - t0, b] = recording.rewards[t]
             rollout.model_outs[t - t0]['actions'][b] = recording.actions[t]
-        rollout.obses[t0 + horizon] = recording.observation(t0 + horizon)
+        rollout.obses[-1, b] = recording.observation(t0 + horizon)
+        rollout.model_outs[-1]['actions'][b] = recording.actions[t0 + horizon]
+
     return rollout
 
 
