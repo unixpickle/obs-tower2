@@ -29,7 +29,10 @@ class GAIL:
                                                horizon=roller.num_steps)
             terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale),
                                                **ppo_kwargs)
-            disc_loss = self.inner_loop(rollout_pi, rollout_expert)
+            disc_loss = self.inner_loop(rollout_pi,
+                                        rollout_expert,
+                                        num_steps=disc_num_steps,
+                                        batch_size=disc_batch_size)
             print('step %d: clipped=%f entropy=%f explained=%f loss=%f' %
                   (i, last_terms['clip_frac'], terms['entropy'], terms['explained'], disc_loss))
             torch.save(ppo.model.state_dict(), save_path)
