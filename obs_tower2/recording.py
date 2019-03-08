@@ -33,20 +33,23 @@ def recording_rollout(recordings, batch, horizon):
     """
     Create a rollout of segments from recordings.
     """
-    rollout = Rollout(states=np.zeros([horizon, batch, 0], dtype=np.float32),
-                      obses=np.zeros([horizon, batch, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH],
+    rollout = Rollout(states=np.zeros([horizon + 1, batch, 0], dtype=np.float32),
+                      obses=np.zeros([horizon + 1, batch, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH],
                                      dtype=np.uint8),
                       rews=np.zeros([horizon, batch], dtype=np.float32),
-                      dones=np.zeros([horizon, batch], dtype=np.float32),
+                      dones=np.zeros([horizon + 1, batch], dtype=np.float32),
                       infos=[[{} for _ in range(batch)] for _ in range(horizon)],
-                      model_outs=[{'actions': [None] * batch} for _ in range(horizon)])
+                      model_outs=[{'actions': [None] * batch} for _ in range(horizon + 1)])
     for b in range(batch):
         recording = random.choice(recordings)
-        t0 = random.randrange(recording.num_steps - horizon)
+        t0 = random.randrange(recording.num_steps - horizon - 1)
         for t in range(t0, t0 + horizon):
-            rollout.obses[t, b] = recording.observation(t)
-            rollout.rews[t, b] = recording.rewards[t]
-            rollout.model_outs[t]['actions'][b] = recording.actions[t]
+            rollout.obses[t - t0, b] = recording.observation(t)
+            rollout.rews[t - t0, b] = recording.rewards[t]
+            rollout.model_outs[t - t0]['actions'][b] = recording.actions[t]
+        rollout.obses[-1, b] = recording.observation(t0 + horizon)
+        rollout.model_outs[-1]['actions'][b] = recording.actions[t0 + horizon]
+
     return rollout
 
 

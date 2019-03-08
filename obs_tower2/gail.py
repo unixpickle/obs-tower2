@@ -10,7 +10,7 @@ from .recording import recording_rollout
 class GAIL:
     def __init__(self, discriminator, lr=1e-4):
         self.discriminator = discriminator
-        self.optimizer = optim.Adam(lr=lr)
+        self.optimizer = optim.Adam(discriminator.parameters(), lr=lr)
 
     def outer_loop(self,
                    ppo,
@@ -26,10 +26,13 @@ class GAIL:
             rollout_pi = roller.rollout()
             rollout_expert = recording_rollout(recordings=recordings,
                                                batch=roller.batched_env.num_envs_per_sub_batch,
-                                               horizon=roller.horizon)
+                                               horizon=roller.num_steps)
             terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale),
                                                **ppo_kwargs)
-            disc_loss = self.inner_loop(rollout_pi, rollout_expert)
+            disc_loss = self.inner_loop(rollout_pi,
+                                        rollout_expert,
+                                        num_steps=disc_num_steps,
+                                        batch_size=disc_batch_size)
             print('step %d: clipped=%f entropy=%f explained=%f loss=%f' %
                   (i, last_terms['clip_frac'], terms['entropy'], terms['explained'], disc_loss))
             torch.save(ppo.model.state_dict(), save_path)

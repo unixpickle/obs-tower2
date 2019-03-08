@@ -59,10 +59,10 @@ class BaseModel(Model):
     IMPALA-based echo-state network.
     """
 
-    def __init__(self, image_size, depth_in, state_size=256):
+    def __init__(self, image_size, depth_in, state_size=256, cnn_class=None):
         super().__init__()
         self._state_size = state_size
-        self.impala_cnn = ImpalaCNN(image_size, depth_in)
+        self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
         self.state_transition = nn.Linear(state_size + 256, state_size)
         self.state_norm = nn.LayerNorm((state_size,))
         self.state_mixer = nn.Linear(state_size + 256, 256)
@@ -100,7 +100,7 @@ class BaseModel(Model):
         for t in range(rollout.num_steps):
             impala_batch = self.tensor(impala_outs[t])
             model_outs = self._forward_with_impala(states, impala_batch)
-            states = model_outs['states'] * (1 - result.dones[t + 1])
+            states = model_outs['states'] * self.tensor(1 - result.dones[t + 1]).view(-1, 1)
             result.states[t + 1] = states.detach().cpu().numpy()
         result.model_outs.append(self._forward_with_impala(states, self.tensor(impala_outs[-1])))
         return result
@@ -123,7 +123,7 @@ class BaseModel(Model):
             if len(batch):
                 yield batch
 
-        result = np.zeros([rollout.num_steps, rollout.batch_size, 256], dtype=np.float32)
+        result = np.zeros([rollout.num_steps + 1, rollout.batch_size, 256], dtype=np.float32)
         for batch in image_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
             float_obs = torch.from_numpy(images).float() / 255.0
@@ -155,7 +155,7 @@ class ACModel(BaseModel):
 
 class DiscriminatorModel(BaseModel):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, cnn_class=MaskedCNN)
         self.discriminator = nn.Linear(256, 1)
         for parameter in self.discriminator.parameters():
             parameter.data.zero_()
@@ -163,7 +163,7 @@ class DiscriminatorModel(BaseModel):
     def add_fields(self, output):
         output['logits'] = self.discriminator(output['base']).view(-1)
         log_disc = F.logsigmoid(output['logits'])
-        log_neg_disc = F.logsigmoid(output['logits'])
+        log_neg_disc = F.logsigmoid(-output['logits'])
         output['prob_pi'] = torch.mean(log_disc)
         output['prob_expert'] = torch.mean(log_neg_disc)
 
@@ -191,6 +191,13 @@ class ImpalaCNN(nn.Module):
         x = self.linear(x)
         x = F.relu(x)
         return x
+
+
+class MaskedCNN(ImpalaCNN):
+    def forward(self, x):
+        mask = np.ones(x.shape[1:], dtype=np.float32)
+        mask[6:10] = 0.0
+        return super().forward(torch.from_numpy(mask).to(x.device) * x)
 
 
 class ImpalaResidual(nn.Module):

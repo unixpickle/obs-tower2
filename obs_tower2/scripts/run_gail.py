@@ -12,7 +12,7 @@ from obs_tower2.util import create_batched_env
 
 NUM_ENVS = 8
 HORIZON = 512
-BATCH_SIZE = NUM_ENVS * HORIZON / 8
+BATCH_SIZE = NUM_ENVS * HORIZON // 8
 LR = 1e-4
 ITERS = 24
 ENTROPY_REG = 0.001
