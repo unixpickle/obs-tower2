@@ -163,7 +163,7 @@ class DiscriminatorModel(BaseModel):
     def add_fields(self, output):
         output['logits'] = self.discriminator(output['base']).view(-1)
         log_disc = F.logsigmoid(output['logits'])
-        log_neg_disc = F.logsigmoid(output['logits'])
+        log_neg_disc = F.logsigmoid(-output['logits'])
         output['prob_pi'] = torch.mean(log_disc)
         output['prob_expert'] = torch.mean(log_neg_disc)
 
