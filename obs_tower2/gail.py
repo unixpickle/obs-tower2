@@ -26,7 +26,7 @@ class GAIL:
             rollout_pi = roller.rollout()
             rollout_expert = recording_rollout(recordings=recordings,
                                                batch=roller.batched_env.num_envs_per_sub_batch,
-                                               horizon=roller.horizon)
+                                               horizon=roller.num_steps)
             terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale),
                                                **ppo_kwargs)
             disc_loss = self.inner_loop(rollout_pi, rollout_expert)
