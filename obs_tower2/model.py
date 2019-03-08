@@ -38,10 +38,10 @@ class Model(nn.Module):
         res = self.forward(self.tensor(states), self.tensor(observations))
         return {k: v.detach().cpu().numpy() for k, v in res.items()}
 
-    def add_states(self, rollout):
+    def run_for_rollout(self, rollout):
         """
         Run the model on the rollout and create a new
-        rollout with the filled-in states.
+        rollout with the filled-in states and model_outs.
 
         This may be more efficient than using step
         manually in a loop, since it may be able to batch
@@ -74,32 +74,42 @@ class BaseModel(Model):
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
         impala_out = self.impala_cnn(float_obs)
+        return self._forward_with_impala(states, impala_out)
+
+    def _forward_with_impala(self, states, impala_out):
         concatenated = torch.cat([impala_out, states], dim=-1)
         new_state = F.relu(self.state_norm(self.state_transition(concatenated)))
         mixed = F.relu(self.state_mixer(concatenated))
-        return {
+        res = {
             'base': mixed,
             'states': new_state,
         }
+        self.add_fields(res)
+        return res
 
-    def add_states(self, rollout):
+    def add_fields(self, output):
+        pass
+
+    def run_for_rollout(self, rollout):
         impala_outs = self._impala_outs(rollout)
         states = torch.zeros(rollout.batch_size, self.state_size).to(self.device)
         result = rollout.copy()
-        result.states = np.zeros([rollout.num_steps, rollout.batch_size, self.state_size],
+        result.states = np.zeros([rollout.num_steps + 1, rollout.batch_size, self.state_size],
                                  dtype=np.float32)
+        result.model_outs = []
         for t in range(rollout.num_steps):
-            impala_batch = torch.from_numpy(impala_outs[t]).to(self.device)
-            concatenated = torch.cat([impala_batch, states], dim=-1)
-            states = F.relu(self.state_norm(self.state_transition(concatenated)))
-            result.states[t] = states.detach().cpu().numpy()
+            impala_batch = self.tensor(impala_outs[t])
+            model_outs = self._forward_with_impala(states, impala_batch)
+            states = model_outs['states'] * (1 - result.dones[t + 1])
+            result.states[t + 1] = states.detach().cpu().numpy()
+        result.model_outs.append(self._forward_with_impala(states, self.tensor(impala_outs[-1])))
         return result
 
     def _impala_outs(self, rollout):
         batch_size = 128
 
         def image_samples():
-            for t in range(rollout.num_steps):
+            for t in range(rollout.num_steps + 1):
                 for b in range(rollout.batch_size):
                     yield (t, b)
 
@@ -133,8 +143,7 @@ class ACModel(BaseModel):
         for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
             parameter.data.zero_()
 
-    def forward(self, states, observations):
-        output = super().forward(states, observations)
+    def add_fields(self, output):
         output['actor'] = self.actor(output['base'])
         output['critic'] = self.critic(output['base']).view(-1)
         log_probs = F.log_softmax(output['actor'], dim=-1)
@@ -142,7 +151,6 @@ class ACModel(BaseModel):
         actions = [np.random.choice(self.num_actions, p=p) for p in probs]
         output['actions'] = self.tensor(np.array(actions))
         output['log_probs'] = torch.stack([log_probs[i, a] for i, a in enumerate(actions)])
-        return output
 
 
 class ImpalaCNN(nn.Module):
