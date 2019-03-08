@@ -37,7 +37,7 @@ def recording_rollout(recordings, batch, horizon):
                       obses=np.zeros([horizon + 1, batch, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH],
                                      dtype=np.uint8),
                       rews=np.zeros([horizon, batch], dtype=np.float32),
-                      dones=np.zeros([horizon, batch], dtype=np.float32),
+                      dones=np.zeros([horizon + 1, batch], dtype=np.float32),
                       infos=[[{} for _ in range(batch)] for _ in range(horizon)],
                       model_outs=[{'actions': [None] * batch} for _ in range(horizon + 1)])
     for b in range(batch):
