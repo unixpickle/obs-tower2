@@ -4,7 +4,7 @@ from anyrl.utils.ffmpeg import export_video
 import numpy as np
 import torch
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH
+from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.util import create_single_env
 from obs_tower2.model import ACModel
 from obs_tower2.util import big_obs
@@ -13,7 +13,7 @@ from obs_tower2.util import big_obs
 def main():
     def image_fn():
         env = create_single_env(random.randrange(15, 20), clear=False)
-        model = ACModel(54, IMAGE_SIZE, IMAGE_DEPTH)
+        model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
         state = torch.load('save.pkl', map_location='cuda')
         model.load_state_dict(state)
         obs = env.reset()
