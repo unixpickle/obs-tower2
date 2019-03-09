@@ -20,6 +20,7 @@ def create_single_env(idx, clear=True):
     from obstacle_tower_env import ObstacleTowerEnv
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
     env = FrameStackEnv(env)
+    env = HumanActionEnv(env)
     if clear:
         env = ClearInfoEnv(env)
     return env
@@ -35,3 +36,13 @@ class ClearInfoEnv(gym.Wrapper):
     def step(self, action):
         obs, rew, done, _ = self.env.step(action)
         return obs, rew, done, {}
+
+
+class HumanActionEnv(gym.ActionWrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.actions = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33]
+        self.action_space = gym.spaces.Discrete(len(self.actions))
+
+    def action(self, act):
+        return self.actions[act]

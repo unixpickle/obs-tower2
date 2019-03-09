@@ -2,7 +2,7 @@ import os
 
 import torch
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH
+from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.gail import GAIL
 from obs_tower2.model import ACModel, DiscriminatorModel
 from obs_tower2.ppo import PPO
@@ -23,7 +23,7 @@ REWARD_SCALE = 0.01
 
 def main():
     env = create_batched_env(NUM_ENVS)
-    model = ACModel(54, IMAGE_SIZE, IMAGE_DEPTH)
+    model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
     discriminator = DiscriminatorModel(IMAGE_SIZE, IMAGE_DEPTH)
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))
