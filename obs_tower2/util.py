@@ -5,6 +5,8 @@ import gym
 import numpy as np
 import os
 
+from .constants import HUMAN_ACTIONS
+
 
 def big_obs(obs, info):
     res = (info['brain_info'].visual_observations[0][0, :, :, :] * 255).astype(np.uint8)
@@ -44,7 +46,7 @@ class ClearInfoEnv(gym.Wrapper):
 class HumanActionEnv(gym.ActionWrapper):
     def __init__(self, env):
         super().__init__(env)
-        self.actions = [0, 3, 6, 9, 12, 15, 18, 21, 24, 27, 30, 33]
+        self.actions = HUMAN_ACTIONS
         self.action_space = gym.spaces.Discrete(len(self.actions))
 
     def action(self, act):
