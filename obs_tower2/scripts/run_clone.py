@@ -38,7 +38,7 @@ def cloning_loss(model, rollout):
     states = model_rollout.states[:-1].reshape(-1, model.state_size)
     obses = model_rollout.obses[:-1].reshape(-1, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH)
     actions = np.array([HUMAN_ACTIONS.index(a)
-                        for m in rollout.model_outs
+                        for m in rollout.model_outs[:-1]
                         for a in m['actions']])
     outs = model(model.tensor(states), model.tensor(obses))
     return F.cross_entropy(outs['actor'], model.tensor(actions).long())
