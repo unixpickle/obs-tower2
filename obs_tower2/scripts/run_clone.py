@@ -31,6 +31,8 @@ def main():
         optimizer.zero_grad()
         train_loss.backward()
         optimizer.step()
+        if not i % 100:
+            torch.save(model.state_dict(), 'save.pkl')
 
 
 def cloning_loss(model, rollout):
