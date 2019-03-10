@@ -66,6 +66,9 @@ class KeyRewardEnv(gym.Wrapper):
         obs, rew, done, info = self.env.step(action)
         top_line = obs[3]
         if not (top_line == self.top_line).all():
-            rew += self.key_reward
+            info['extra_reward'] = self.key_reward
+        else:
+            info['extra_reward'] = 0.0
+        rew += info['extra_reward']
         self.top_line = top_line
         return obs, rew, done, info

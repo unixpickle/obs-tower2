@@ -44,6 +44,9 @@ class GAIL:
         applied = self.discriminator.run_for_rollout(result)
         for t, model_outs in enumerate(applied.model_outs[:-1]):
             result.rewards[t] = -model_outs['prob_pi'] * rew_scale
+            for b, info in enumerate(result.infos[t]):
+                if 'extra_reward' in info:
+                    result.rewards[t][b] += info['extra_reward']
         return result
 
     def inner_loop(self, rollout_pi, rollout_expert, num_steps=12, batch_size=None):
