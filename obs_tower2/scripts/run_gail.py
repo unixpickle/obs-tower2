@@ -22,7 +22,7 @@ REWARD_SCALE = 0.01
 
 
 def main():
-    env = create_batched_env(NUM_ENVS)
+    env = create_batched_env(NUM_ENVS, key_reward=True)
     model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
     discriminator = DiscriminatorModel(IMAGE_SIZE, IMAGE_DEPTH)
     if os.path.exists('save.pkl'):
