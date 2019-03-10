@@ -35,7 +35,7 @@ def main():
 
 def cloning_loss(model, rollout):
     model_rollout = model.run_for_rollout(rollout)
-    states = model_rollout.states[:-1].reshape(-1, model.state_size())
+    states = model_rollout.states[:-1].reshape(-1, model.state_size)
     obses = model_rollout.obses[:-1].reshape(-1, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH)
     actions = np.array([HUMAN_ACTIONS.index(a)
                         for m in rollout.model_outs
