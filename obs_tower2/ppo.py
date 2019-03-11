@@ -37,12 +37,12 @@ class PPO:
         for entries in rollout.batches(batch_size, num_steps):
             def choose(values):
                 return self.model.tensor(np.array([values[t, b] for t, b in entries]))
-            terms = self.terms(choose(rollout.states)
-                                choose(rollout.obses),
-                                choose(advs),
-                                choose(targets),
-                                choose(actions),
-                                choose(log_probs))
+            terms = self.terms(choose(rollout.states),
+                               choose(rollout.obses),
+                               choose(advs),
+                               choose(targets),
+                               choose(actions),
+                               choose(log_probs))
             self.optimizer.zero_grad()
             terms['loss'].backward()
             self.optimizer.step()
