@@ -18,9 +18,12 @@ class PPO:
     def outer_loop(self, roller, save_path='save.pkl', **kwargs):
         for i in itertools.count():
             terms, last_terms = self.inner_loop(roller.rollout(), **kwargs)
-            print('step %d: clipped=%f entropy=%f explained=%f' %
-                  (i, last_terms['clip_frac'], terms['entropy'], terms['explained']))
+            self.print_outer_loop(i, terms, last_terms)
             torch.save(self.model.state_dict(), save_path)
+
+    def print_outer_loop(self, i, terms, last_terms):
+        print('step %d: clipped=%f entropy=%f explained=%f' %
+              (i, last_terms['clip_frac'], terms['entropy'], terms['explained']))
 
     def inner_loop(self, rollout, num_steps=12, batch_size=None):
         if batch_size is None:
@@ -29,13 +32,13 @@ class PPO:
         targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
-        first_terms = None
-        last_terms = None
+        firstterms = None
+        lastterms = None
         for entries in rollout.batches(batch_size, num_steps):
             def choose(values):
                 return self.model.tensor(np.array([values[t, b] for t, b in entries]))
-            model_outs = self.model(choose(rollout.states), choose(rollout.obses))
-            terms = self._terms(model_outs,
+            terms = self.terms(choose(rollout.states)
+                                choose(rollout.obses),
                                 choose(advs),
                                 choose(targets),
                                 choose(actions),
@@ -43,12 +46,14 @@ class PPO:
             self.optimizer.zero_grad()
             terms['loss'].backward()
             self.optimizer.step()
-            last_terms = {k: v.item() for k, v in terms.items()}
-            if first_terms is None:
-                first_terms = last_terms
-        return first_terms, last_terms
+            lastterms = {k: v.item() for k, v in terms.items() if k != 'model_outs'}
+            if firstterms is None:
+                firstterms = lastterms
+        return firstterms, lastterms
 
-    def _terms(self, model_outs, advs, targets, actions, log_probs):
+    def terms(self, states, obses, advs, targets, actions, log_probs):
+        model_outs = self.model(states, obses)
+
         scale = 1 / (1e-8 + torch.std(advs))
         advs = (advs - torch.mean(advs)) * scale
 
@@ -71,8 +76,9 @@ class PPO:
             'explained': explained,
             'clip_frac': clip_frac,
             'entropy': -neg_entropy,
+            'vf_loss': vf_loss,
+            'pi_loss': pi_loss,
+            'ent_loss': ent_loss,
             'loss': vf_loss + pi_loss + ent_loss,
+            'model_outs': model_outs,
         }
-
-    def _tensor(self, x):
-        return torch.from_numpy(x).to(self.model.device)
