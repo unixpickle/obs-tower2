@@ -4,6 +4,7 @@ import torch.nn.functional as F
 
 from .ppo import PPO
 
+
 class Prierarchy(PPO):
     def __init__(self, prior, *args, **kwargs):
         super().__init__(*args, **kwargs)
