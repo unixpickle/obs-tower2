@@ -4,7 +4,7 @@ import torch
 
 from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.model import ACModel
-from obs_tower2.ppo import PPO
+from obs_tower2.prierarchy import Prierarchy
 from obs_tower2.roller import Roller
 from obs_tower2.util import create_batched_env
 
