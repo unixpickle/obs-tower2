@@ -11,7 +11,7 @@ class Prierarchy(PPO):
     def print_outer_loop(self, i, terms, last_terms):
         print('step %d: clipped=%f entropy=%f explained=%f kl=%f' %
               (i, last_terms['clip_frac'], last_terms['entropy'], terms['explained'],
-               last_terms['kl']))
+               terms['kl']))
 
     def terms(self, states, obses, advs, targets, actions, log_probs):
         super_out = super().terms(states, obses, advs, targets, actions, log_probs)
