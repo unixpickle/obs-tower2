@@ -25,7 +25,7 @@ def main():
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))
     if os.path.exists('save_prior.pkl'):
-        model.load_state_dict(torch.load('save_prior.pkl'))
+        prior.load_state_dict(torch.load('save_prior.pkl'))
     model.to(torch.device('cuda'))
     prior.to(torch.device('cuda'))
     roller = Roller(env, model, HORIZON)
