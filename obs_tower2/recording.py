@@ -82,7 +82,7 @@ class Recording:
             img = TF.adjust_gamma(img, random.random() * 0.1 + 0.95)
             img = TF.adjust_hue(img, random.random() * 0.05)
             img = TF.adjust_saturation(img, random.random() * 0.1 + 0.95)
-            img = TF.affine(img, 0, (random.randrange(-2, 3), random.randrange(-2, 3)), 0, 0)
+            img = TF.affine(img, 0, (random.randrange(-2, 3), random.randrange(-2, 3)), 1.0, 0)
         return np.array(img)
 
     def _load_json(self, name):
