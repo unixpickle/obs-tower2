@@ -25,12 +25,13 @@ class Prierarchy(PPO):
         targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
+        prior_logits = prior_rollout.actor_logits()
         firstterms = None
         lastterms = None
         for entries in rollout.batches(batch_size, num_steps):
             def choose(values):
                 return self.model.tensor(np.array([values[t, b] for t, b in entries]))
-            terms = self.extended_terms(choose(prior_rollout.states),
+            terms = self.extended_terms(choose(prior_logits),
                                         choose(rollout.states),
                                         choose(rollout.obses),
                                         choose(advs),
@@ -45,11 +46,9 @@ class Prierarchy(PPO):
                 firstterms = lastterms
         return firstterms, lastterms
 
-    def extended_terms(self, prior_states, states, obses, advs, targets, actions, log_probs):
+    def extended_terms(self, prior_logits, states, obses, advs, targets, actions, log_probs):
         super_out = self.terms(states, obses, advs, targets, actions, log_probs)
-        prior_outs = self.prior(prior_states, obses)
-        actor = prior_outs['actor'].detach()
-        log_prior = F.log_softmax(actor, dim=-1)
+        log_prior = F.log_softmax(prior_logits, dim=-1)
         log_posterior = F.log_softmax(super_out['model_outs']['actor'], dim=-1)
         kl = torch.mean(torch.sum(torch.exp(log_posterior) * (log_posterior - log_prior), dim=-1))
         kl_loss = kl * self.ent_reg

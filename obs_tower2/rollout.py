@@ -67,6 +67,13 @@ class Rollout:
         """
         return np.array([m['log_probs'] for m in self.model_outs], dtype=np.float32)
 
+    def logits(self):
+        """
+        Get the actor logits from the model at each
+        timestep.
+        """
+        return np.array([m['actor'] for m in self.model_outs], dtype=np.float32)
+
     def advantages(self, gamma, lam):
         """
         Generate a [num_steps x batch_size] array of
