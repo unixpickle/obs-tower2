@@ -60,7 +60,7 @@ class Prierarchy(PPO):
 
     def add_rewards(self, rollout, prior_rollout):
         rollout = rollout.copy()
-        rollout.rewards = rollout.rewards.copy()
+        rollout.rews = rollout.rews.copy()
 
         def log_probs(r):
             return F.log_softmax(torch.from_numpy(np.array([m['actor'] for m in r.model_outs])))
@@ -69,6 +69,6 @@ class Prierarchy(PPO):
         p = log_probs(rollout)
         kls = torch.mean(torch.sum(torch.exp(p) * (p - q), dim=-1), dim=-1).numpy()
 
-        rollout.rewards -= kls[..., :-1] * self.kl_coeff
+        rollout.rews -= kls[..., :-1] * self.kl_coeff
 
         return rollout
