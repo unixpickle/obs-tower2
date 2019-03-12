@@ -11,7 +11,7 @@ from obs_tower2.util import create_batched_env
 NUM_ENVS = 8
 HORIZON = 512
 BATCH_SIZE = NUM_ENVS * HORIZON // 8
-LR = 1e-4
+LR = 3e-5
 ITERS = 24
 PRIOR_REG = 0.01
 GAE_LAM = 0.95
