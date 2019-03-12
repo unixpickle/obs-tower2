@@ -36,7 +36,7 @@ class Model(nn.Module):
         Like forward() but with numpy arrays.
         """
         res = self.forward(self.tensor(states), self.tensor(observations))
-        return {k: v.detach().cpu().numpy() for k, v in res.items()}
+        return model_outs_to_cpu(res)
 
     def run_for_rollout(self, rollout):
         """
@@ -103,6 +103,7 @@ class BaseModel(Model):
             states = model_outs['states'] * self.tensor(1 - result.dones[t + 1]).view(-1, 1)
             result.states[t + 1] = states.detach().cpu().numpy()
         result.model_outs.append(self._forward_with_impala(states, self.tensor(impala_outs[-1])))
+        result.model_outs = [model_outs_to_cpu(m) for m in result.model_outs]
         return result
 
     def _impala_outs(self, rollout):
@@ -212,3 +213,7 @@ class ImpalaResidual(nn.Module):
         out = F.relu(out)
         out = self.conv2(out)
         return out + x
+
+
+def model_outs_to_cpu(model_outs):
+    return {k: v.detach().cpu().numpy() for k, v in model_outs.items()}
