@@ -67,7 +67,7 @@ class Prierarchy(PPO):
 
         q = log_probs(prior_rollout)
         p = log_probs(rollout)
-        kls = torch.mean(torch.sum(torch.exp(p) * (p - q), dim=-1), dim=-1).numpy()
+        kls = torch.sum(torch.exp(p) * (p - q), dim=-1).numpy()
 
         rollout.rews -= kls[..., :-1] * self.kl_coeff
 
