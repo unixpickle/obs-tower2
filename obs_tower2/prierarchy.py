@@ -6,9 +6,10 @@ from .ppo import PPO
 
 
 class Prierarchy(PPO):
-    def __init__(self, prior, *args, **kwargs):
+    def __init__(self, prior, *args, kl_coeff=0.01, **kwargs):
         super().__init__(*args, **kwargs)
         self.prior = prior
+        self.kl_coeff = kl_coeff
 
     def print_outer_loop(self, i, terms, last_terms):
         print('step %d: clipped=%f entropy=%f explained=%f kl=%f' %
@@ -19,6 +20,7 @@ class Prierarchy(PPO):
         if batch_size is None:
             batch_size = rollout.num_steps * rollout.batch_size
         prior_rollout = self.prior.run_for_rollout(rollout)
+        rollout = self.add_rewards(rollout, prior_rollout)
         advs = rollout.advantages(self.gamma, self.lam)
         targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
@@ -55,3 +57,18 @@ class Prierarchy(PPO):
         super_out['kl_loss'] = kl_loss * self.ent_reg
         super_out['loss'] = super_out['vf_loss'] + super_out['pi_loss'] + kl_loss
         return super_out
+
+    def add_rewards(self, rollout, prior_rollout):
+        rollout = rollout.copy()
+        rollout.rewards = rollout.rewards.copy()
+
+        def log_probs(r):
+            return F.log_softmax(torch.from_numpy(np.array([m['actor'] for m in r.model_outs])))
+
+        q = log_probs(prior_rollout)
+        p = log_probs(rollout)
+        kls = torch.mean(torch.sum(torch.exp(p) * (p - q), dim=-1), dim=-1).numpy()
+
+        rollout.rewards -= kls[..., :-1] * self.kl_coeff
+
+        return rollout
