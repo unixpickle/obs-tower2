@@ -25,7 +25,7 @@ class Prierarchy(PPO):
         targets = advs + rollout.value_predictions()[:-1]
         actions = rollout.actions()
         log_probs = rollout.log_probs()
-        prior_logits = prior_rollout.actor_logits()
+        prior_logits = prior_rollout.logits()
         firstterms = None
         lastterms = None
         for entries in rollout.batches(batch_size, num_steps):
