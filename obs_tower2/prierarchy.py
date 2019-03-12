@@ -6,7 +6,7 @@ from .ppo import PPO
 
 
 class Prierarchy(PPO):
-    def __init__(self, prior, *args, kl_coeff=0.01, **kwargs):
+    def __init__(self, prior, *args, kl_coeff=0, **kwargs):
         super().__init__(*args, **kwargs)
         self.prior = prior
         self.kl_coeff = kl_coeff
