@@ -63,7 +63,8 @@ class Prierarchy(PPO):
         rollout.rews = rollout.rews.copy()
 
         def log_probs(r):
-            return F.log_softmax(torch.from_numpy(np.array([m['actor'] for m in r.model_outs])))
+            return F.log_softmax(torch.from_numpy(np.array([m['actor'] for m in r.model_outs])),
+                                 dim=-1)
 
         q = log_probs(prior_rollout)
         p = log_probs(rollout)
