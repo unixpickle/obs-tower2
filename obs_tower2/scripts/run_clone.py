@@ -21,7 +21,7 @@ def main():
         model.load_state_dict(torch.load('save.pkl'))
     model.to(torch.device('cuda'))
     optimizer = optim.Adam(model.parameters(), lr=LR)
-    train, test = load_data()
+    train, test = load_data(augment=True)
     for i in itertools.count():
         train_rollout = recording_rollout(train, BATCH, HORIZON)
         test_rollout = recording_rollout(test, BATCH, HORIZON)

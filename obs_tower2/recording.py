@@ -5,12 +5,13 @@ import random
 
 from PIL import Image
 import numpy as np
+import torchvision.transforms.functional as TF
 
 from .constants import IMAGE_SIZE, IMAGE_DEPTH
 from .rollout import Rollout
 
 
-def load_data(dirpath=None):
+def load_data(dirpath=None, augment=False):
     if dirpath is None:
         dirpath = os.environ['OBS_TOWER_RECORDINGS']
     training = []
@@ -21,7 +22,7 @@ def load_data(dirpath=None):
             continue
         if not os.path.exists(os.path.join(path, 'actions.json')):
             continue
-        recording = Recording(path)
+        recording = Recording(path, augment=augment)
         if recording.seed < 25:
             testing.append(recording)
         else:
@@ -54,8 +55,9 @@ def recording_rollout(recordings, batch, horizon):
 
 
 class Recording:
-    def __init__(self, path):
+    def __init__(self, path, augment=False):
         self.path = path
+        self.augment = augment
         self.seed = int(os.path.basename(path).split('_')[0])
         self.actions = self._load_json('actions.json')
         self.rewards = self._load_json('rewards.json')
@@ -73,7 +75,15 @@ class Recording:
 
     @functools.lru_cache(maxsize=4)
     def _load_image(self, idx):
-        return np.array(Image.open(os.path.join(self.path, '%d.png' % idx)))
+        img = Image.open(os.path.join(self.path, '%d.png' % idx))
+        if self.augment:
+            img = TF.adjust_brightness(img, random.random() * 0.1 + 0.95)
+            img = TF.adjust_contrast(img, random.random() * 0.1 + 0.95)
+            img = TF.adjust_gamma(img, random.random() * 0.1 + 0.95)
+            img = TF.adjust_hue(img, random.random() * 0.05)
+            img = TF.adjust_saturation(img, random.random() * 0.1 + 0.95)
+            img = TF.affine(img, 0, (random.randrange(-2, 3), random.randrange(-2, 3)), 0, 0)
+        return np.array(img)
 
     def _load_json(self, name):
         path = os.path.join(self.path, name)
