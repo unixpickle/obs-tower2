@@ -30,6 +30,7 @@ class PPO:
             batch_size = rollout.num_steps * rollout.batch_size
         advs = rollout.advantages(self.gamma, self.lam)
         targets = advs + rollout.value_predictions()[:-1]
+        advs = (advs - np.mean(advs)) / (1e-8 + np.std(advs))
         actions = rollout.actions()
         log_probs = rollout.log_probs()
         firstterms = None
@@ -54,13 +55,9 @@ class PPO:
     def terms(self, states, obses, advs, targets, actions, log_probs):
         model_outs = self.model(states, obses)
 
-        scale = 1 / (1e-8 + torch.std(advs))
-        advs = (advs - torch.mean(advs)) * scale
-
         vf_loss = torch.mean(torch.pow(model_outs['critic'] - targets, 2))
         variance = torch.var(targets)
         explained = 1 - vf_loss / variance
-        vf_loss = vf_loss * scale
 
         new_log_probs = -F.cross_entropy(model_outs['actor'], actions.long(), reduction='none')
         ratio = torch.exp(new_log_probs - log_probs)
