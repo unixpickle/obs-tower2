@@ -11,8 +11,8 @@ from obs_tower2.model import ACModel
 from obs_tower2.recording import load_data, recording_rollout
 
 LR = 1e-4
-BATCH = 8
-HORIZON = 256
+BATCH = 4
+HORIZON = 64
 
 
 def main():
