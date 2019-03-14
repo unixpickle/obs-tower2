@@ -17,8 +17,8 @@ HORIZON = 64
 
 def main():
     model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
-    if os.path.exists('save.pkl'):
-        model.load_state_dict(torch.load('save.pkl'))
+    if os.path.exists('save_clone.pkl'):
+        model.load_state_dict(torch.load('save_clone.pkl'))
     model.to(torch.device('cuda'))
     optimizer = optim.Adam(model.parameters(), lr=LR)
     train, test = load_data(augment=True)
@@ -32,7 +32,7 @@ def main():
         train_loss.backward()
         optimizer.step()
         if not i % 100:
-            torch.save(model.state_dict(), 'save.pkl')
+            torch.save(model.state_dict(), 'save_clone.pkl')
 
 
 def cloning_loss(model, rollout):
