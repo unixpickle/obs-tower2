@@ -43,13 +43,13 @@ class GAIL:
 
     def add_rewards(self, rollout_pi, rew_scale, real_rew_scale):
         result = rollout_pi.copy()
-        result.rewards = result.rewards.copy() * real_rew_scale
+        result.rews = result.rews.copy() * real_rew_scale
         applied = self.discriminator.run_for_rollout(result)
         for t, model_outs in enumerate(applied.model_outs[:-1]):
-            result.rewards[t] -= model_outs['prob_pi'] * rew_scale
+            result.rews[t] -= model_outs['prob_pi'] * rew_scale
             for b, info in enumerate(result.infos[t]):
                 if 'extra_reward' in info:
-                    result.rewards[t][b] += info['extra_reward']
+                    result.rews[t][b] += info['extra_reward']
         return result
 
     def inner_loop(self, rollout_pi, rollout_expert, num_steps=12, batch_size=None):
