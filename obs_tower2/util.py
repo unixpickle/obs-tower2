@@ -40,8 +40,8 @@ def log_floors(rollout):
 
 
 class LogRoller(Roller):
-    def rollouts(self):
-        result = super().rollouts()
+    def rollout(self):
+        result = super().rollout()
         log_floors(result)
         return result
 
