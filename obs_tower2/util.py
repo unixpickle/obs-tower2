@@ -29,6 +29,7 @@ def create_single_env(idx, clear=True, key_reward=False):
         env = ClearInfoEnv(env)
     if key_reward:
         env = KeyRewardEnv(env)
+    env = FloorTrackEnv(env)
     return env
 
 
