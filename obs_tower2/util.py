@@ -6,6 +6,7 @@ import numpy as np
 import os
 
 from .constants import HUMAN_ACTIONS
+from .roller import Roller
 
 
 def big_obs(obs, info):
@@ -29,6 +30,20 @@ def create_single_env(idx, clear=True, key_reward=False):
     if key_reward:
         env = KeyRewardEnv(env)
     return env
+
+
+def log_floors(rollout):
+    for t in range(rollout.num_steps):
+        for b in range(rollout.batch_size):
+            if rollout.dones[t, b]:
+                print('floor=%d' % rollout.infos[t][b]['floor'])
+
+
+class LogRoller(Roller):
+    def rollouts(self):
+        result = super().rollouts()
+        log_floors(result)
+        return result
 
 
 class ClearInfoEnv(gym.Wrapper):
@@ -73,4 +88,21 @@ class KeyRewardEnv(gym.Wrapper):
             info['extra_reward'] = 0.0
         rew += info['extra_reward']
         self.top_line = top_line
+        return obs, rew, done, info
+
+
+class FloorTrackEnv(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.floor = 0
+
+    def reset(self, **kwargs):
+        self.env.reset(**kwargs)
+        self.floor = 0
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        if rew == 1.0:
+            self.floor += 1.0
+        info['floor'] = self.floor
         return obs, rew, done, info
