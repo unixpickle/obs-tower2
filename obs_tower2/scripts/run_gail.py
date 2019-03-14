@@ -7,8 +7,7 @@ from obs_tower2.gail import GAIL
 from obs_tower2.model import ACModel, DiscriminatorModel
 from obs_tower2.prierarchy import Prierarchy
 from obs_tower2.recording import load_data
-from obs_tower2.roller import Roller
-from obs_tower2.util import create_batched_env
+from obs_tower2.util import LogRoller, create_batched_env
 
 NUM_ENVS = 8
 HORIZON = 512
@@ -36,7 +35,7 @@ def main():
     discriminator.to(torch.device('cuda'))
     train, test = load_data()
     recordings = train + test
-    roller = Roller(env, model, HORIZON)
+    roller = LogRoller(env, model, HORIZON)
     ppo = Prierarchy(prior, model, gamma=GAE_GAMMA, lam=GAE_LAM, lr=LR, ent_reg=PRIOR_REG)
     gail = GAIL(discriminator, lr=LR)
     gail.outer_loop(ppo,
