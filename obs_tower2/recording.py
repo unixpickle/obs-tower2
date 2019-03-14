@@ -43,6 +43,7 @@ def recording_rollout(recordings, batch, horizon):
                       model_outs=[{'actions': [None] * batch} for _ in range(horizon + 1)])
     for b in range(batch):
         recording = random.choice(recordings)
+        recording.sample_augmentation()
         t0 = random.randrange(recording.num_steps - horizon - 1)
         for t in range(t0, t0 + horizon):
             rollout.obses[t - t0, b] = recording.observation(t)
@@ -58,9 +59,13 @@ class Recording:
     def __init__(self, path, augment=False):
         self.path = path
         self.augment = augment
+        self.augmentation = None
         self.seed = int(os.path.basename(path).split('_')[0])
         self.actions = self._load_json('actions.json')
         self.rewards = self._load_json('rewards.json')
+
+    def sample_augmentation(self):
+        self.augmentation = Augmentation()
 
     @property
     def num_steps(self):
@@ -76,13 +81,8 @@ class Recording:
     @functools.lru_cache(maxsize=4)
     def _load_image(self, idx):
         img = Image.open(os.path.join(self.path, '%d.png' % idx))
-        if self.augment:
-            img = TF.adjust_brightness(img, random.random() * 0.1 + 0.95)
-            img = TF.adjust_contrast(img, random.random() * 0.1 + 0.95)
-            img = TF.adjust_gamma(img, random.random() * 0.1 + 0.95)
-            img = TF.adjust_hue(img, random.random() * 0.05)
-            img = TF.adjust_saturation(img, random.random() * 0.1 + 0.95)
-            img = TF.affine(img, 0, (random.randrange(-2, 3), random.randrange(-2, 3)), 1.0, 0)
+        if self.augment and self.augmentation is not None:
+            img = self.augmentation.apply(img)
         return np.array(img)
 
     def _load_json(self, name):
@@ -91,3 +91,25 @@ class Recording:
             return None
         with open(path, 'r') as in_file:
             return json.load(in_file)
+
+
+class Augmentation:
+    def __init__(self):
+        self.brightness = random.random() * 0.1 + 0.95
+        self.contrast = random.random() * 0.1 + 0.95
+        self.gamma = random.random() * 0.1 + 0.95
+        self.hue = random.random() * 0.05
+        self.saturation = random.random() * 0.1 + 0.95
+        self.translation = (random.randrange(-2, 3), random.randrange(-2, 3))
+
+    def apply(self, image):
+        arr = np.array(image)
+        content = Image.fromarray(arr[10:])
+        content = TF.adjust_brightness(content, self.brightness)
+        content = TF.adjust_contrast(content, self.contrast)
+        content = TF.adjust_gamma(content, self.gamma)
+        content = TF.adjust_hue(content, self.hue)
+        content = TF.adjust_saturation(content, self.saturation)
+        content = TF.affine(content, 0, self.translation, 1.0, 0)
+        arr[10:] = np.array(content)
+        return Image.fromarray(arr)
