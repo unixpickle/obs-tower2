@@ -98,8 +98,8 @@ class FloorTrackEnv(gym.Wrapper):
         self.floor = 0
 
     def reset(self, **kwargs):
-        self.env.reset(**kwargs)
         self.floor = 0
+        return self.env.reset(**kwargs)
 
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
