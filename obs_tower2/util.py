@@ -34,10 +34,10 @@ def create_single_env(idx, clear=True, key_reward=False):
 
 
 def log_floors(rollout):
-    for t in range(rollout.num_steps):
+    for t in range(1, rollout.num_steps):
         for b in range(rollout.batch_size):
             if rollout.dones[t, b]:
-                print('floor=%d' % rollout.infos[t][b]['floor'])
+                print('floor=%d' % rollout.infos[t - 1][b]['floor'])
 
 
 class LogRoller(Roller):
