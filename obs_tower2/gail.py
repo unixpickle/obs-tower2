@@ -18,6 +18,7 @@ class GAIL:
                    recordings,
                    save_path='save.pkl',
                    rew_scale=0.01,
+                   real_rew_scale=1.0,
                    disc_save_path='save_disc.pkl',
                    disc_num_steps=12,
                    disc_batch_size=None,
@@ -27,7 +28,8 @@ class GAIL:
             rollout_expert = recording_rollout(recordings=recordings,
                                                batch=roller.batched_env.num_envs_per_sub_batch,
                                                horizon=roller.num_steps)
-            terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale),
+            terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale,
+                                                                real_rew_scale),
                                                **ppo_kwargs)
             disc_loss = self.inner_loop(rollout_pi,
                                         rollout_expert,
@@ -39,12 +41,12 @@ class GAIL:
             torch.save(ppo.model.state_dict(), save_path)
             torch.save(self.discriminator.state_dict(), disc_save_path)
 
-    def add_rewards(self, rollout_pi, rew_scale):
+    def add_rewards(self, rollout_pi, rew_scale, real_rew_scale):
         result = rollout_pi.copy()
-        result.rewards = np.zeros([result.num_steps, result.batch_size], dtype=np.float32)
+        result.rewards = result.rewards.copy() * real_rew_scale
         applied = self.discriminator.run_for_rollout(result)
         for t, model_outs in enumerate(applied.model_outs[:-1]):
-            result.rewards[t] = -model_outs['prob_pi'] * rew_scale
+            result.rewards[t] -= model_outs['prob_pi'] * rew_scale
             for b, info in enumerate(result.infos[t]):
                 if 'extra_reward' in info:
                     result.rewards[t][b] += info['extra_reward']

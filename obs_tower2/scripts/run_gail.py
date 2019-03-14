@@ -42,6 +42,7 @@ def main():
                     roller,
                     recordings,
                     rew_scale=REWARD_SCALE,
+                    real_rew_scale=1.0,
                     disc_num_steps=ITERS,
                     disc_batch_size=BATCH_SIZE,
                     num_steps=ITERS,
