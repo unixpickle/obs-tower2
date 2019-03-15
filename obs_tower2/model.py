@@ -67,11 +67,11 @@ class BaseModel(Model):
         self.state_norm = nn.LayerNorm((state_size,))
         self.state_mixer = nn.Sequential(
             nn.Linear(state_size + 256, 256),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Linear(256, 256),
-            nn.ReLU,
+            nn.ReLU(),
             nn.Linear(256, 256),
-            nn.ReLU,
+            nn.ReLU(),
         )
 
     @property
