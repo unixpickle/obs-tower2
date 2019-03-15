@@ -65,7 +65,7 @@ class BaseModel(Model):
         self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
         self.state_transition = nn.Linear(state_size + 256, state_size)
         self.state_norm = nn.LayerNorm((state_size,))
-        self.state_mixer = nn.Sequantial(
+        self.state_mixer = nn.Sequential(
             nn.Linear(state_size + 256, 256),
             nn.ReLU,
             nn.Linear(256, 256),
