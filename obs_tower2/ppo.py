@@ -50,6 +50,7 @@ class PPO:
             lastterms = {k: v.item() for k, v in terms.items() if k != 'model_outs'}
             if firstterms is None:
                 firstterms = lastterms
+            del terms
         return firstterms, lastterms
 
     def terms(self, states, obses, advs, targets, actions, log_probs):

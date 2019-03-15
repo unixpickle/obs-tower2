@@ -74,4 +74,7 @@ class GAIL:
             self.optimizer.step()
             if first_loss is None:
                 first_loss = loss.item()
+            del loss
+            del disc_pi
+            del disc_expert
         return first_loss
