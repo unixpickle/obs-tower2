@@ -30,6 +30,7 @@ def create_single_env(idx, clear=True, key_reward=False):
     if key_reward:
         env = KeyRewardEnv(env)
     env = FloorTrackEnv(env)
+    env = TimeRewardEnv(env)
     return env
 
 
@@ -67,6 +68,25 @@ class HumanActionEnv(gym.ActionWrapper):
 
     def action(self, act):
         return self.actions[act]
+
+
+class TimeRewardEnv(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.mid_line = None
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        self.mid_line = obs[7]
+        return obs
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        mid_line = obs[7]
+        if rew != 1.0 and np.sum(mid_line == 0) < np.sum(self.mid_line == 0):
+            rew += 0.1
+        self.mid_line = mid_line
+        return obs, rew, done, info
 
 
 class KeyRewardEnv(gym.Wrapper):
