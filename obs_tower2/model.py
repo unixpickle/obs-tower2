@@ -59,13 +59,20 @@ class BaseModel(Model):
     IMPALA-based echo-state network.
     """
 
-    def __init__(self, image_size, depth_in, state_size=256, cnn_class=None):
+    def __init__(self, image_size, depth_in, state_size=1024, cnn_class=None):
         super().__init__()
         self._state_size = state_size
         self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
         self.state_transition = nn.Linear(state_size + 256, state_size)
         self.state_norm = nn.LayerNorm((state_size,))
-        self.state_mixer = nn.Linear(state_size + 256, 256)
+        self.state_mixer = nn.Sequential(
+            nn.Linear(state_size + 256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+            nn.Linear(256, 256),
+            nn.ReLU(),
+        )
 
     @property
     def state_size(self):
@@ -79,7 +86,7 @@ class BaseModel(Model):
     def _forward_with_impala(self, states, impala_out):
         concatenated = torch.cat([impala_out, states], dim=-1)
         new_state = F.relu(self.state_norm(self.state_transition(concatenated)))
-        mixed = F.relu(self.state_mixer(concatenated))
+        mixed = self.state_mixer(concatenated)
         res = {
             'base': mixed,
             'states': new_state,
