@@ -12,6 +12,7 @@ from obstacle_tower_env import ObstacleTowerEnv
 from obs_tower2.recorder.record import EnvInteractor, record_episode, select_seed
 
 RES_DIR = os.environ['OBS_TOWER_TAIL_RECORDINGS']
+MAX_STEPS = 300
 
 
 def main():
@@ -25,13 +26,13 @@ def main():
     env.seed(seed)
     env.floor(floors.get(seed, 0))
     obs = env.reset()
-    record_episode(seed, env, viewer, obs, res_dir=RES_DIR)
+    record_episode(seed, env, viewer, obs, res_dir=RES_DIR, max_steps=MAX_STEPS)
 
 
 def read_min_floors(path):
     result = {}
     with open(path, 'r') as in_file:
-        pairs = [x.strip.split(',') for x in in_file.readlines() if x.strip()]
+        pairs = [x.strip().split(',') for x in in_file.readlines() if x.strip()]
         for seed, floor in [(int(x), int(y)) for x, y in pairs]:
             if seed not in result or floor < result[seed]:
                 result[seed] = floor

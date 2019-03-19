@@ -84,8 +84,8 @@ def run_episode(env, viewer):
     record_episode(seed, env, viewer, obs)
 
 
-def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR):
-    for p in [tmp_dir, tmp_dir]:
+def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max_steps=None):
+    for p in [tmp_dir, res_dir]:
         if not os.path.exists(p):
             os.mkdir(p)
 
@@ -106,6 +106,8 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR):
             obs, rew, done, info = env.step(action)
             reward_log.append(rew)
             Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
+            if i == max_steps:
+                break
             i += 1
         viewer.imshow(big_obs(obs, info))
         pyglet.clock.tick()
@@ -122,6 +124,8 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR):
 
 
 def select_seed(res_dir=RES_DIR):
+    if not os.path.exists(res_dir):
+        return random.randrange(100)
     listing = [x for x in os.listdir(res_dir) if not x.startswith('.')]
     counts = {k: 0 for k in range(100)}
     for x in listing:
