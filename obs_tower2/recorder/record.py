@@ -31,6 +31,7 @@ class EnvInteractor(SimpleImageViewer):
         self.keys = pyglet.window.key.KeyStateHandler()
         self._paused = False
         self._jump = False
+        self.imshow(np.zeros([168, 168, 3], dtype=np.uint8))
 
     def imshow(self, image):
         was_none = self.window is None
@@ -72,7 +73,6 @@ class EnvInteractor(SimpleImageViewer):
 
 def main():
     viewer = EnvInteractor()
-    viewer.imshow(np.zeros([168, 168, 3], dtype=np.uint8))
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=random.randrange(11, 20))
     run_episode(env, viewer)
 
@@ -121,8 +121,8 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR):
     os.rename(tmp_dir, os.path.join(res_dir, dirname))
 
 
-def select_seed():
-    listing = [x for x in os.listdir(RES_DIR) if not x.startswith('.')]
+def select_seed(res_dir=RES_DIR):
+    listing = [x for x in os.listdir(res_dir) if not x.startswith('.')]
     counts = {k: 0 for k in range(100)}
     for x in listing:
         counts[int(x.split('_')[0])] += 1
