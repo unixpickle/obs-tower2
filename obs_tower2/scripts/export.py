@@ -14,7 +14,7 @@ def main():
     def image_fn():
         env = create_single_env(random.randrange(15, 20), clear=False)
         model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
-        state = torch.load('save.pkl', map_location='cuda')
+        state = torch.load('save.pkl', map_location='cpu')
         model.load_state_dict(state)
         obs = env.reset()
         state = np.zeros([1, model.state_size], dtype=np.float32)
