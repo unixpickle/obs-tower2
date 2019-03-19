@@ -110,7 +110,7 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
                 print('solved %d floors' % floors)
             reward_log.append(rew)
             Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
-            if i == max_steps and floors > 0:
+            if max_steps is not None and i >= max_steps and floors > 0:
                 break
             i += 1
         viewer.imshow(big_obs(obs, info))
