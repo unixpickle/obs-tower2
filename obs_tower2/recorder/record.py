@@ -71,9 +71,6 @@ class EnvInteractor(SimpleImageViewer):
 
 
 def main():
-    for p in [RES_DIR, TMP_DIR]:
-        if not os.path.exists(p):
-            os.mkdir(p)
     viewer = EnvInteractor()
     viewer.imshow(np.zeros([168, 168, 3], dtype=np.uint8))
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=random.randrange(11, 20))
@@ -82,27 +79,31 @@ def main():
 
 def run_episode(env, viewer):
     seed = select_seed()
+    env.seed(seed)
+    obs = env.reset()
+    record_episode(seed, env, viewer, obs)
+
+
+def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR):
+    for p in [tmp_dir, tmp_dir]:
+        if not os.path.exists(p):
+            os.mkdir(p)
+
     dirname = '%d_%d' % (seed, int(random.random() * 1e9))
-    tmp_dir = os.path.join(TMP_DIR, dirname)
+    tmp_dir = os.path.join(tmp_dir, dirname)
     os.mkdir(tmp_dir)
 
     done = False
-    env.seed(seed)
-    obs = env.reset()
     action_log = []
     reward_log = []
     Image.fromarray(obs).save(os.path.join(tmp_dir, '0.png'))
     i = 1
     last_time = time.time()
-    floor = 0
     while not done:
         if not viewer.paused():
             action = viewer.get_action()
             action_log.append(action)
             obs, rew, done, info = env.step(action)
-            if rew == 1:
-                floor += 1
-                print('at floor %d' % floor)
             reward_log.append(rew)
             Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
             i += 1
@@ -117,7 +118,7 @@ def run_episode(env, viewer):
     with open(os.path.join(tmp_dir, 'rewards.json'), 'w+') as out:
         json.dump(reward_log, out)
 
-    os.rename(tmp_dir, os.path.join(RES_DIR, dirname))
+    os.rename(tmp_dir, os.path.join(res_dir, dirname))
 
 
 def select_seed():
