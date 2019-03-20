@@ -43,7 +43,7 @@ def recording_rollout(recordings, batch, horizon):
                       dones=np.zeros([horizon + 1, batch], dtype=np.float32),
                       infos=[[{} for _ in range(batch)] for _ in range(horizon)],
                       model_outs=[{'actions': [None] * batch} for _ in range(horizon + 1)])
-    weights = np.array([rec.num_steps for rec in recordings])
+    weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
     weights /= np.sum(weights)
     for b in range(batch):
         recording = np.random.choice(len(recordings), p=weights)
