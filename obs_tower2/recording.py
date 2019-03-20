@@ -24,7 +24,7 @@ def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],
             if not os.path.exists(os.path.join(path, 'actions.json')):
                 continue
             recording = Recording(path, augment=augment)
-            if recording.seed < 25:
+            if recording.uid < 1e8:
                 testing.append(recording)
             else:
                 training.append(recording)
@@ -64,7 +64,9 @@ class Recording:
         self.path = path
         self.augment = augment
         self.augmentation = None
-        self.seed = int(os.path.basename(path).split('_')[0])
+        comps = os.path.basename(path).split('_')
+        self.seed = int(comps[0])
+        self.uid = int(comps[1])
         self.actions = self._load_json('actions.json')
         self.rewards = self._load_json('rewards.json')
 
