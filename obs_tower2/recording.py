@@ -46,7 +46,7 @@ def recording_rollout(recordings, batch, horizon):
     weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
     weights /= np.sum(weights)
     for b in range(batch):
-        recording = np.random.choice(len(recordings), p=weights)
+        recording = [recordings[i] for i in np.random.choice(len(recordings), p=weights)]
         recording.sample_augmentation()
         t0 = random.randrange(recording.num_steps - horizon - 1)
         for t in range(t0, t0 + horizon):
