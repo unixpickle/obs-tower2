@@ -16,6 +16,7 @@ def main():
         model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
         state = torch.load('save.pkl', map_location='cpu')
         model.load_state_dict(state)
+        model.to(torch.device('cuda'))
         obs = env.reset()
         state = np.zeros([1, model.state_size], dtype=np.float32)
         while True:
