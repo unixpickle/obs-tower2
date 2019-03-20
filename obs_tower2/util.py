@@ -18,14 +18,16 @@ def big_obs(obs, info):
     return res
 
 
-def create_batched_env(num_envs, key_reward=False):
-    return batched_gym_env([lambda i=i: create_single_env(i, key_reward=key_reward)
+def create_batched_env(num_envs, key_reward=False, augment=False):
+    return batched_gym_env([lambda i=i: create_single_env(i, key_reward=key_reward, augment=augment)
                             for i in range(num_envs)])
 
 
-def create_single_env(idx, clear=True, key_reward=False):
+def create_single_env(idx, clear=True, key_reward=False, augment=False):
     from obstacle_tower_env import ObstacleTowerEnv
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
+    if augment:
+        env = AugmentEnv(env)
     env = FrameStackEnv(env)
     env = HumanActionEnv(env)
     if clear:
@@ -74,6 +76,22 @@ class LogRoller(Roller):
         result = super().rollout()
         log_floors(result)
         return result
+
+
+class AugmentEnv(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+        self.augmentation = None
+
+    def reset(self, **kwargs):
+        self.augmentation = Augmentation()
+        obs = self.env.reset(**kwargs)
+        return self.augmentation.apply_np(obs)
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        obs = self.augmentation.apply_np(obs)
+        return obs, rew, done, info
 
 
 class ClearInfoEnv(gym.Wrapper):

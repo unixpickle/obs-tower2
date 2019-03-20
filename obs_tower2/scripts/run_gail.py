@@ -23,7 +23,7 @@ GAIL_HORIZON = 256
 
 
 def main():
-    env = create_batched_env(NUM_ENVS)
+    env = create_batched_env(NUM_ENVS, augment=True)
     model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
     prior = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
     discriminator = DiscriminatorModel(IMAGE_SIZE, IMAGE_DEPTH)
@@ -36,7 +36,7 @@ def main():
     model.to(torch.device('cuda'))
     prior.to(torch.device('cuda'))
     discriminator.to(torch.device('cuda'))
-    train, test = load_data()
+    train, test = load_data(augment=True)
     recordings = train + test
     roller = LogRoller(env, model, HORIZON)
     ppo = Prierarchy(prior, model, gamma=GAE_GAMMA, lam=GAE_LAM, lr=LR, ent_reg=PRIOR_REG)
