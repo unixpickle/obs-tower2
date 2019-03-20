@@ -1,9 +1,12 @@
+import os
+import random
+
 from PIL import Image
 from anyrl.envs import batched_gym_env
 from anyrl.envs.wrappers import FrameStackEnv
 import gym
 import numpy as np
-import os
+import torchvision.transforms.functional as TF
 
 from .constants import HUMAN_ACTIONS
 from .roller import Roller
@@ -39,6 +42,31 @@ def log_floors(rollout):
         for b in range(rollout.batch_size):
             if rollout.dones[t, b]:
                 print('floor=%d' % rollout.infos[t - 1][b]['floor'])
+
+
+class Augmentation:
+    def __init__(self):
+        self.brightness = random.random() * 0.1 + 0.95
+        self.contrast = random.random() * 0.1 + 0.95
+        self.gamma = random.random() * 0.1 + 0.95
+        self.hue = random.random() * 0.05
+        self.saturation = random.random() * 0.1 + 0.95
+        self.translation = (random.randrange(-2, 3), random.randrange(-2, 3))
+
+    def apply(self, image):
+        return Image.fromarray(self.apply_np(np.array(image)))
+
+    def apply_np(self, np_image):
+        content = Image.fromarray(np_image[10:])
+        content = TF.adjust_brightness(content, self.brightness)
+        content = TF.adjust_contrast(content, self.contrast)
+        content = TF.adjust_gamma(content, self.gamma)
+        content = TF.adjust_hue(content, self.hue)
+        content = TF.adjust_saturation(content, self.saturation)
+        content = TF.affine(content, 0, self.translation, 1.0, 0)
+        result = np.array(np_image)
+        result[10:] = np.array(content)
+        return result
 
 
 class LogRoller(Roller):

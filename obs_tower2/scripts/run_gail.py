@@ -18,6 +18,8 @@ PRIOR_REG = 0.003
 GAE_LAM = 0.95
 GAE_GAMMA = 0.9975
 REWARD_SCALE = 0.01
+GAIL_NUM_ENVS = 16
+GAIL_HORIZON = 256
 
 
 def main():
@@ -46,6 +48,8 @@ def main():
                     real_rew_scale=1.0,
                     disc_num_steps=ITERS,
                     disc_batch_size=BATCH_SIZE,
+                    expert_batch=GAIL_NUM_ENVS,
+                    expert_horizon=GAIL_HORIZON,
                     num_steps=ITERS,
                     batch_size=BATCH_SIZE)
 

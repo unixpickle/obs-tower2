@@ -22,12 +22,18 @@ class GAIL:
                    disc_save_path='save_disc.pkl',
                    disc_num_steps=12,
                    disc_batch_size=None,
+                   expert_batch=None,
+                   expert_horizon=None,
                    **ppo_kwargs):
+        if expert_batch is None:
+            expert_batch = roller.batched_env.num_envs_per_sub_batch
+        if expert_horizon is None:
+            expert_horizon = roller.num_steps
         for i in itertools.count():
             rollout_pi = roller.rollout()
             rollout_expert = recording_rollout(recordings=recordings,
-                                               batch=roller.batched_env.num_envs_per_sub_batch,
-                                               horizon=roller.num_steps)
+                                               batch=expert_batch,
+                                               horizon=expert_horizon)
             terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale,
                                                                 real_rew_scale),
                                                **ppo_kwargs)
