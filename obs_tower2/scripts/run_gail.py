@@ -12,7 +12,7 @@ from obs_tower2.util import LogRoller, create_batched_env
 NUM_ENVS = 8
 HORIZON = 512
 BATCH_SIZE = NUM_ENVS * HORIZON // 8
-LR = 1e-4
+LR = 3e-5
 ITERS = 24
 PRIOR_REG = 0.003
 GAE_LAM = 0.95
@@ -44,7 +44,7 @@ def main():
                     recordings,
                     rew_scale=REWARD_SCALE,
                     real_rew_scale=1.0,
-                    disc_num_steps=ITERS,
+                    disc_num_steps=HORIZON * NUM_ENVS // BATCH_SIZE,
                     disc_batch_size=BATCH_SIZE,
                     num_steps=ITERS,
                     batch_size=BATCH_SIZE)
