@@ -18,14 +18,16 @@ def big_obs(obs, info):
     return res
 
 
-def create_batched_env(num_envs, key_reward=False, augment=False):
-    return batched_gym_env([lambda i=i: create_single_env(i, key_reward=key_reward, augment=augment)
+def create_batched_env(num_envs, **kwargs):
+    return batched_gym_env([lambda i=i: create_single_env(i, **kwargs)
                             for i in range(num_envs)])
 
 
-def create_single_env(idx, clear=True, key_reward=False, augment=False):
+def create_single_env(idx, clear=True, key_reward=False, augment=False, rand_floor=False):
     from obstacle_tower_env import ObstacleTowerEnv
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
+    if rand_floor:
+        env = RandomFloorEnv(env)
     if augment:
         env = AugmentEnv(env)
     env = FrameStackEnv(env)
@@ -173,3 +175,15 @@ class FloorTrackEnv(gym.Wrapper):
             self.floor += 1.0
         info['floor'] = self.floor
         return obs, rew, done, info
+
+
+class RandomFloorEnv(gym.Wrapper):
+    def __init__(self, env):
+        super().__init__(env)
+
+    def reset(self, **kwargs):
+        self.env.floor(random.randrange(25))
+        return self.env.reset(**kwargs)
+
+    def step(self, action):
+        return self.env.step(action)
