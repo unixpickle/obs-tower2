@@ -23,6 +23,7 @@ class Prierarchy(PPO):
         rollout = self.add_rewards(rollout, prior_rollout)
         advs = rollout.advantages(self.gamma, self.lam)
         targets = advs + rollout.value_predictions()[:-1]
+        advs = (advs - np.mean(advs)) / (1e-8 + np.std(advs))
         actions = rollout.actions()
         log_probs = rollout.log_probs()
         prior_logits = prior_rollout.logits()
