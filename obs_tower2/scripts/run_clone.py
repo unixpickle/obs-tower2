@@ -14,6 +14,7 @@ from obs_tower2.util import LogRoller, create_batched_env
 LR = 1e-4
 BATCH = 4
 HORIZON = 64
+ENT_REG = 0.01
 
 
 def main():
@@ -34,7 +35,7 @@ def main():
         entropy = action_entropy(model, ent_rollout)
         print('step %d: test=%f train=%f entropy=%f' % (i, test_loss, train_loss.item(),
                                                         entropy.item()))
-        loss = train_loss - entropy
+        loss = train_loss - ENT_REG * entropy
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
