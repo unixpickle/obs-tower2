@@ -17,7 +17,8 @@ ITERS = 24
 PRIOR_REG = 0.01
 GAE_LAM = 0.95
 GAE_GAMMA = 0.9975
-REWARD_SCALE = 0.01
+REWARD_SCALE = 1.0
+GAIL_REWARD_SCALE = 0.01
 GAIL_HORIZON = 256
 GAIL_NUM_ENVS = (HORIZON * NUM_ENVS) // GAIL_HORIZON
 
@@ -44,8 +45,8 @@ def main():
     gail.outer_loop(ppo,
                     roller,
                     recordings,
-                    rew_scale=REWARD_SCALE,
-                    real_rew_scale=1.0,
+                    rew_scale=GAIL_REWARD_SCALE,
+                    real_rew_scale=REWARD_SCALE,
                     disc_num_steps=HORIZON * NUM_ENVS // BATCH_SIZE,
                     disc_batch_size=BATCH_SIZE,
                     expert_batch=GAIL_NUM_ENVS,
