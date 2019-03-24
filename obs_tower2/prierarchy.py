@@ -52,10 +52,9 @@ class Prierarchy(PPO):
         super_out = self.terms(states, obses, advs, targets, actions, log_probs)
         log_prior = F.log_softmax(prior_logits, dim=-1)
         log_posterior = F.log_softmax(super_out['model_outs']['actor'], dim=-1)
-        kl1 = torch.mean(torch.sum(torch.exp(log_posterior) * (log_posterior - log_prior), dim=-1))
-        kl2 = torch.mean(torch.sum(torch.exp(log_prior) * (log_prior - log_posterior), dim=-1))
-        kl_loss = 0.5 * (kl1 + kl2) * self.ent_reg
-        super_out['kl'] = kl1
+        kl = torch.mean(torch.sum(torch.exp(log_posterior) * (log_posterior - log_prior), dim=-1))
+        kl_loss = kl * self.ent_reg
+        super_out['kl'] = kl
         super_out['kl_loss'] = kl_loss * self.ent_reg
         super_out['loss'] = super_out['vf_loss'] + super_out['pi_loss'] + kl_loss
         return super_out
