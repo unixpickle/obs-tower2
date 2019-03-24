@@ -56,7 +56,7 @@ class Prierarchy(PPO):
         kl2 = torch.mean(torch.sum(torch.exp(log_prior) * (log_prior - log_posterior), dim=-1))
         kl_loss = 0.5 * (kl1 + kl2) * self.ent_reg
         super_out['kl'] = kl1
-        super_out['kl_loss'] = kl_loss * self.ent_reg
+        super_out['kl_loss'] = kl_loss
         super_out['loss'] = super_out['vf_loss'] + super_out['pi_loss'] + kl_loss
         return super_out
 
