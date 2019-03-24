@@ -38,9 +38,9 @@ def main():
 
 def cloning_loss(model, rollout):
     model_outs = apply_model(model, rollout)
-    actions = np.array([HUMAN_ACTIONS.index(a)
+    actions = np.array([epsilon_greedy(HUMAN_ACTIONS.index(a))
                         for m in rollout.model_outs[:-1]
-                        for epsilon_greedy(a) in m['actions']])
+                        for a in m['actions']])
     return F.cross_entropy(model_outs['actor'], model.tensor(actions).long())
 
 
