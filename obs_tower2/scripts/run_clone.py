@@ -13,6 +13,7 @@ from obs_tower2.recording import load_data, recording_rollout
 LR = 1e-4
 BATCH = 4
 HORIZON = 64
+EPSILON = 0.1
 
 
 def main():
@@ -39,14 +40,8 @@ def cloning_loss(model, rollout):
     model_outs = apply_model(model, rollout)
     actions = np.array([HUMAN_ACTIONS.index(a)
                         for m in rollout.model_outs[:-1]
-                        for a in m['actions']])
+                        for epsilon_greedy(a) in m['actions']])
     return F.cross_entropy(model_outs['actor'], model.tensor(actions).long())
-
-
-def action_entropy(model, rollout):
-    model_outs = apply_model(model, rollout)
-    all_probs = torch.log_softmax(model_outs['actor'], dim=-1)
-    return -torch.mean(torch.sum(torch.exp(all_probs) * all_probs, dim=-1))
 
 
 def apply_model(model, rollout, no_time=True):
@@ -56,6 +51,12 @@ def apply_model(model, rollout, no_time=True):
     if no_time:
         obses[:, 6:10] = np.random.uniform(high=255, size=obses[:, 6:10].shape).astype(np.uint8)
     return model(model.tensor(states), model.tensor(obses))
+
+
+def epsilon_greedy(action):
+    if random.random() < EPSILON:
+        return random.randrange(NUM_ACTIONS)
+    return action
 
 
 if __name__ == '__main__':
