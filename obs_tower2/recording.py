@@ -6,8 +6,9 @@ import random
 from PIL import Image
 import numpy as np
 
-from .constants import IMAGE_SIZE, IMAGE_DEPTH
+from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
 from .rollout import Rollout
+from .states import StateFeatures
 from .util import Augmentation
 
 
@@ -41,7 +42,8 @@ def recording_rollout(recordings, batch, horizon):
     Create a rollout of segments from recordings.
     """
     assert all([rec.num_steps > horizon for rec in recordings])
-    rollout = Rollout(states=np.zeros([horizon + 1, batch, 0], dtype=np.float32),
+    rollout = Rollout(states=np.zeros([horizon + 1, batch, STATE_STACK, STATE_SIZE],
+                                      dtype=np.float32),
                       obses=np.zeros([horizon + 1, batch, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH],
                                      dtype=np.uint8),
                       rews=np.zeros([horizon, batch], dtype=np.float32),
@@ -55,9 +57,11 @@ def recording_rollout(recordings, batch, horizon):
         recording.sample_augmentation()
         t0 = random.randrange(recording.num_steps - horizon - 1)
         for t in range(t0, t0 + horizon):
+            rollout.states[t - t0, b] = recording.state(t)
             rollout.obses[t - t0, b] = recording.observation(t)
             rollout.rews[t - t0, b] = recording.rewards[t]
             rollout.model_outs[t - t0]['actions'][b] = recording.actions[t]
+        rollout.states[-1, b] = recording.state(t0 + horizon)
         rollout.obses[-1, b] = recording.observation(t0 + horizon)
         rollout.model_outs[-1]['actions'][b] = recording.actions[t0 + horizon]
 
@@ -74,6 +78,9 @@ class Recording:
         self.uid = int(comps[1])
         self.actions = self._load_json('actions.json')
         self.rewards = self._load_json('rewards.json')
+        # TODO: load this from JSON, where it should be cached
+        # before use.
+        self.current_state = [None] * (self.num_steps + 1)
 
     def sample_augmentation(self):
         self.augmentation = Augmentation()
@@ -88,6 +95,23 @@ class Recording:
             img = self.load_frame(max(0, i))
             history.append(img)
         return np.concatenate(history, axis=-1)
+
+    def state(self, timestep):
+        result = []
+        for i in range(timestep - STATE_STACK + 1, timestep + 1):
+            result.append(self._current_state(i))
+        return result
+
+    def _current_state(self, timestep):
+        if timestep < 0:
+            return [0.0] * STATE_SIZE
+        if self.current_state[timestep] is None:
+            feats = StateFeatures().features(self.load_frame(timestep))
+            self.current_state[timestep] = [0.0] * (STATE_SIZE - len(feats)) + list(feats)
+            if timestep > 0:
+                self.current_state[timestep][self.actions[timestep - 1]] = 1.0
+                self.current_state[timestep][NUM_ACTIONS] = self.rewards[timestep - 1]
+        return self.current_state[timestep]
 
     @functools.lru_cache(maxsize=4)
     def load_frame(self, idx):
