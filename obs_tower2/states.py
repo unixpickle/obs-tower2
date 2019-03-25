@@ -20,7 +20,7 @@ class StateEnv(gym.Wrapper):
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
         self.prev_states[:-1] = self.prev_states[1:]
-        self.prev_states[-1] = np.zeros_like(np.prev_states[-1])
+        self.prev_states[-1] = np.zeros_like(self.prev_states[-1])
         self.prev_states[-1, action] = 1
         self.prev_states[-1, NUM_ACTIONS] = rew
         self.prev_states[-1, NUM_ACTIONS + 1:] = self.feats.features(np.array([obs]))
