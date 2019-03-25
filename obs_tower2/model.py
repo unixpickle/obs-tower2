@@ -122,9 +122,9 @@ class BaseModel(Model):
         result = np.zeros([rollout.num_steps + 1, rollout.batch_size, 256], dtype=np.float32)
         for batch in index_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
-            float_obs = torch.from_numpy(images).float() / 255.0
+            float_obs = self.tensor(images).float() / 255.0
             impala_out = self.impala_cnn(float_obs)
-            states = np.array([rollout.states[t, b] for t, b in batch])
+            states = self.tensor(np.array([rollout.states[t, b] for t, b in batch]))
             flat_states = states.view(states.shape[0], -1)
             states_out = self.state_mlp(flat_states)
             concatenated = torch.cat([impala_out, states_out], dim=-1)
