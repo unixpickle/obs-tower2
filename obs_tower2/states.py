@@ -2,8 +2,7 @@ from anyrl.envs.wrappers import BatchedWrapper
 import gym
 import numpy as np
 
-from .constanst import STATE_SIZE, NUM_ACTIONS
-from .constants import STATE_STACK
+from .constants import STATE_SIZE, STATE_STACK, NUM_ACTIONS
 
 
 class StateEnv(gym.Wrapper):
