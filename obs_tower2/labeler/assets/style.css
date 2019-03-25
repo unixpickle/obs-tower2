@@ -1,0 +1,35 @@
+#container {
+    display: block;
+    margin: auto;
+    max-width: 450px;
+    text-align: center;
+}
+
+#name-and-screenshot, #fields {
+    text-align: left;
+}
+
+#name-and-screenshot {
+    display: inline-block;
+    width: 220px;
+}
+
+#fields {
+    display: inline-block;
+    width: 200px;
+}
+
+#name {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 15px;
+}
+
+#screenshot {
+    width: 200px;
+    height: 200px;
+}
+
+#save-button {
+    margin-top: 10px;
+}

@@ -11,6 +11,11 @@ from .rollout import Rollout
 from .util import Augmentation
 
 
+def load_all_data(**kwargs):
+    train, test = load_data(**kwargs)
+    return train + test
+
+
 def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],
                         os.environ['OBS_TOWER_TAIL_RECORDINGS']),
               augment=False):
@@ -80,12 +85,12 @@ class Recording:
     def observation(self, timestep, stack=2):
         history = []
         for i in range(timestep - stack + 1, timestep + 1):
-            img = self._load_image(max(0, i))
+            img = self.load_frame(max(0, i))
             history.append(img)
         return np.concatenate(history, axis=-1)
 
     @functools.lru_cache(maxsize=4)
-    def _load_image(self, idx):
+    def load_frame(self, idx):
         img = Image.open(os.path.join(self.path, '%d.png' % idx))
         if self.augment and self.augmentation is not None:
             img = self.augmentation.apply(img)
