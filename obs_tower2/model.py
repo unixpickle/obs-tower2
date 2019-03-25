@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .constants import STATE_SIZE, STATE_STACK
+from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
 
 
 class Model(nn.Module):
@@ -61,9 +61,9 @@ class BaseModel(Model):
     IMPALA-based echo-state network.
     """
 
-    def __init__(self, image_size, depth_in, cnn_class=None):
+    def __init__(self, cnn_class=None):
         super().__init__()
-        self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
+        self.impala_cnn = (cnn_class or ImpalaCNN)(IMAGE_SIZE, IMAGE_DEPTH)
         self.state_mlp = nn.Sequential(
             nn.Linear(STATE_STACK * STATE_SIZE, 256),
             nn.ReLU(),
@@ -136,10 +136,10 @@ class BaseModel(Model):
 
 
 class ACModel(BaseModel):
-    def __init__(self, num_actions, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.num_actions = num_actions
-        self.actor = nn.Linear(256, num_actions)
+        self.num_actions = NUM_ACTIONS
+        self.actor = nn.Linear(256, self.num_actions)
         self.critic = nn.Linear(256, 1)
         for parameter in list(self.actor.parameters()) + list(self.critic.parameters()):
             parameter.data.zero_()

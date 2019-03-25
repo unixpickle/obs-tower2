@@ -7,7 +7,7 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS, HUMAN_ACTIONS
+from obs_tower2.constants import HUMAN_ACTIONS, NUM_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.recording import load_data, recording_rollout
 
@@ -18,7 +18,7 @@ EPSILON = 0.1
 
 
 def main():
-    model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
+    model = ACModel()
     if os.path.exists('save_clone.pkl'):
         model.load_state_dict(torch.load('save_clone.pkl'))
     model.to(torch.device('cuda'))
@@ -46,9 +46,8 @@ def cloning_loss(model, rollout):
 
 
 def apply_model(model, rollout, no_time=True):
-    model_rollout = model.run_for_rollout(rollout)
-    states = model_rollout.states[:-1].reshape(-1, model.state_size)
-    obses = model_rollout.obses[:-1].reshape(-1, IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH)
+    states = rollout.states[:-1].reshape(-1, *rollout.states.shape[2:])
+    obses = rollout.obses[:-1].reshape(-1, *rollout.obses.shape[2:])
     if no_time:
         obses[:, 6:10] = np.random.uniform(high=255, size=obses[:, 6:10].shape).astype(np.uint8)
     return model(model.tensor(states), model.tensor(obses))

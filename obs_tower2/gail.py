@@ -61,8 +61,6 @@ class GAIL:
     def inner_loop(self, rollout_pi, rollout_expert, num_steps=12, batch_size=None):
         if batch_size is None:
             batch_size = rollout_pi.num_steps * rollout_pi.batch_size
-        rollout_pi = self.discriminator.run_for_rollout(rollout_pi)
-        rollout_expert = self.discriminator.run_for_rollout(rollout_expert)
         batches_pi = rollout_pi.batches(batch_size, num_steps)
         batches_expert = rollout_expert.batches(batch_size, num_steps)
         first_loss = None

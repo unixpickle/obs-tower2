@@ -2,7 +2,6 @@ import os
 
 import torch
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.prierarchy import Prierarchy
 from obs_tower2.util import LogRoller, create_batched_env
@@ -19,8 +18,8 @@ GAE_GAMMA = 0.9975
 
 def main():
     env = create_batched_env(NUM_ENVS)
-    model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
-    prior = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
+    model = ACModel()
+    prior = ACModel()
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))
     if os.path.exists('save_prior.pkl'):

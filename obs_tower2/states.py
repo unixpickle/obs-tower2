@@ -7,9 +7,9 @@ from .constants import STATE_STACK
 
 
 class StateEnv(gym.Wrapper):
-    def __init__(self, env, feats):
+    def __init__(self, env, feats=None):
         super().__init__(env)
-        self.feats = feats
+        self.feats = feats or StateFeatures()
         self.prev_states = np.zeros([STATE_STACK, STATE_SIZE], dtype=np.float32)
 
     def reset(self, **kwargs):
@@ -29,9 +29,9 @@ class StateEnv(gym.Wrapper):
 
 
 class BatchedStateEnv(BatchedWrapper):
-    def __init__(self, env, feats):
+    def __init__(self, env, feats=None):
         super().__init__(env)
-        self.feats = feats
+        self.feats = feats or StateFeatures()
         self.prev_states = np.zeros([env.num_sub_batches, env.num_envs_per_sub_batch,
                                      STATE_STACK, STATE_SIZE], dtype=np.float32)
         self.prev_actions = [[None] * env.num_envs_per_sub_batch

@@ -2,7 +2,6 @@ import os
 
 import torch
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.gail import GAIL
 from obs_tower2.model import ACModel, DiscriminatorModel
 from obs_tower2.prierarchy import Prierarchy
@@ -25,9 +24,9 @@ GAIL_NUM_ENVS = (HORIZON * NUM_ENVS) // GAIL_HORIZON
 
 def main():
     env = create_batched_env(NUM_ENVS, augment=True)
-    model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
-    prior = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
-    discriminator = DiscriminatorModel(IMAGE_SIZE, IMAGE_DEPTH)
+    model = ACModel()
+    prior = ACModel()
+    discriminator = DiscriminatorModel()
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))
     if os.path.exists('save_disc.pkl'):

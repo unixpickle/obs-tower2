@@ -2,7 +2,6 @@ import os
 
 import torch
 
-from obs_tower2.constants import IMAGE_SIZE, IMAGE_DEPTH, NUM_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.ppo import PPO
 from obs_tower2.roller import Roller
@@ -20,7 +19,7 @@ GAE_GAMMA = 0.9975
 
 def main():
     env = create_batched_env(NUM_ENVS)
-    model = ACModel(NUM_ACTIONS, IMAGE_SIZE, IMAGE_DEPTH)
+    model = ACModel()
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))
     model.to(torch.device('cuda'))
