@@ -28,9 +28,8 @@ class Roller:
         if self._prev_obs is None:
             self.reset()
         batch = self.batched_env.num_envs_per_sub_batch
-        states = np.zeros((self.num_steps + 1, batch) + self._prev_states.shape, dtype=np.float32)
-        obses = np.zeros((self.num_steps + 1, batch) + self.batched_env.observation_space.shape,
-                         dtype=self.batched_env.observation_space.dtype)
+        states = np.zeros((self.num_steps + 1,) + self._prev_states.shape, dtype=np.float32)
+        obses = np.zeros((self.num_steps + 1,) + self._prev_obs.shape, dtype=self._prev_obs.dtype)
         rews = np.zeros([self.num_steps, batch], dtype=np.float32)
         dones = np.zeros([self.num_steps + 1, batch], dtype=np.bool)
         infos = []
