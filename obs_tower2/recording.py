@@ -6,7 +6,7 @@ import random
 from PIL import Image
 import numpy as np
 
-from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
+from .constants import HUMAN_ACTIONS, IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
 from .rollout import Rollout
 from .states import StateFeatures
 from .util import Augmentation
@@ -109,7 +109,7 @@ class Recording:
             feats = StateFeatures().features(np.array([self.load_frame(timestep)]))[0]
             self.current_state[timestep] = [0.0] * (STATE_SIZE - len(feats)) + list(feats)
             if timestep > 0:
-                self.current_state[timestep][self.actions[timestep - 1]] = 1.0
+                self.current_state[timestep][HUMAN_ACTIONS.index(self.actions[timestep - 1])] = 1.0
                 self.current_state[timestep][NUM_ACTIONS] = self.rewards[timestep - 1]
         return self.current_state[timestep]
 
