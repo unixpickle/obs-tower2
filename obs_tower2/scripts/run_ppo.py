@@ -5,6 +5,7 @@ import torch
 from obs_tower2.model import ACModel
 from obs_tower2.ppo import PPO
 from obs_tower2.roller import Roller
+from obs_tower2.states import BatchedStateEnv
 from obs_tower2.util import create_batched_env
 
 NUM_ENVS = 8
@@ -18,7 +19,7 @@ GAE_GAMMA = 0.9975
 
 
 def main():
-    env = create_batched_env(NUM_ENVS)
+    env = BatchedStateEnv(create_batched_env(NUM_ENVS))
     model = ACModel()
     if os.path.exists('save.pkl'):
         model.load_state_dict(torch.load('save.pkl'))

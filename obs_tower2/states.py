@@ -49,6 +49,7 @@ class BatchedStateEnv(BatchedWrapper):
     def step_wait(self, sub_batch=0):
         obses, rews, dones, infos = self.env.step_wait(sub_batch=sub_batch)
         self.prev_states[sub_batch, :, :-1] = self.prev_states[sub_batch, :, 1:]
+        features = self.feats.features(np.array(obses)[..., -3:])
         for i, done in enumerate(dones):
             if done:
                 self.prev_states[sub_batch, i].fill(0.0)
@@ -56,6 +57,7 @@ class BatchedStateEnv(BatchedWrapper):
                 self.prev_states[sub_batch, i, -1].fill(0.0)
                 self.prev_states[sub_batch, i, -1, self.prev_actions[sub_batch, i]] = 1.0
                 self.prev_states[sub_batch, i, -1, NUM_ACTIONS] = rews[i]
+        self.prev_states[sub_batch, :, -1, NUM_ACTIONS + 1:] = features
         return (self.prev_states[sub_batch].copy(), obses), rews, dones, infos
 
 

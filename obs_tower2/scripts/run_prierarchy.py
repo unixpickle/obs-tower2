@@ -4,6 +4,7 @@ import torch
 
 from obs_tower2.model import ACModel
 from obs_tower2.prierarchy import Prierarchy
+from obs_tower2.states import BatchedStateEnv
 from obs_tower2.util import LogRoller, create_batched_env
 
 NUM_ENVS = 8
@@ -17,7 +18,7 @@ GAE_GAMMA = 0.9975
 
 
 def main():
-    env = create_batched_env(NUM_ENVS)
+    env = BatchedStateEnv(create_batched_env(NUM_ENVS))
     model = ACModel()
     prior = ACModel()
     if os.path.exists('save.pkl'):
