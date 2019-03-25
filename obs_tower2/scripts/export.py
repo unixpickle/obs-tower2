@@ -18,7 +18,7 @@ def main():
         model.to(torch.device('cuda'))
         state, obs = env.reset()
         while True:
-            output = model.step(state, np.array([obs]))
+            output = model.step(np.array([state]), np.array([obs]))
             (state, obs), rew, done, info = env.step(output['actions'][0])
             yield big_obs(obs[..., -3:], info)
             if done:
