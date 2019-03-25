@@ -100,13 +100,13 @@ class Recording:
         result = []
         for i in range(timestep - STATE_STACK + 1, timestep + 1):
             result.append(self._current_state(i))
-        return result
+        return np.array(result, dtype=np.float32)
 
     def _current_state(self, timestep):
         if timestep < 0:
             return [0.0] * STATE_SIZE
         if self.current_state[timestep] is None:
-            feats = StateFeatures().features(self.load_frame(timestep))
+            feats = StateFeatures().features(np.array([self.load_frame(timestep)]))[0]
             self.current_state[timestep] = [0.0] * (STATE_SIZE - len(feats)) + list(feats)
             if timestep > 0:
                 self.current_state[timestep][self.actions[timestep - 1]] = 1.0
