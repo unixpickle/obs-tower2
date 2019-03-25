@@ -30,7 +30,7 @@ def main():
         train_loss.backward()
         optimizer.step()
         if not i % 100:
-            torch.save(model.state_dict(), 'save_clone.pkl')
+            torch.save(model.state_dict(), 'save_classifier.pkl')
 
 
 def classification_loss(model, dataset):
