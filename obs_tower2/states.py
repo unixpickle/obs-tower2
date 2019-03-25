@@ -55,7 +55,7 @@ class BatchedStateEnv(BatchedWrapper):
                 self.prev_states[sub_batch, i].fill(0.0)
             else:
                 self.prev_states[sub_batch, i, -1].fill(0.0)
-                self.prev_states[sub_batch, i, -1, self.prev_actions[sub_batch, i]] = 1.0
+                self.prev_states[sub_batch, i, -1, self.prev_actions[sub_batch][i]] = 1.0
                 self.prev_states[sub_batch, i, -1, NUM_ACTIONS] = rews[i]
         self.prev_states[sub_batch, :, -1, NUM_ACTIONS + 1:] = features
         return (self.prev_states[sub_batch].copy(), obses), rews, dones, infos
