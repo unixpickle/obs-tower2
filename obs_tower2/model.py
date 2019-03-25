@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .constants import STATE_STACK, STATE_SIZE
+from .constants import STATE_SIZE, STATE_STACK
 
 
 class Model(nn.Module):
