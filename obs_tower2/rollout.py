@@ -21,7 +21,6 @@ class Rollout:
 
         values: outputs from the value function.
         actions: actions from the policy.
-        states: output states from the network.
 
     Members have shape [num_steps x batch_size x ...] or
     [(num_steps + 1) x batch_size x ...].

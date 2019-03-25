@@ -4,6 +4,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from .constants import STATE_STACK, STATE_SIZE
+
 
 class Model(nn.Module):
     """
@@ -41,7 +43,7 @@ class Model(nn.Module):
     def run_for_rollout(self, rollout):
         """
         Run the model on the rollout and create a new
-        rollout with the filled-in states and model_outs.
+        rollout with the filled-in model_outs.
 
         This may be more efficient than using step
         manually in a loop, since it may be able to batch
@@ -59,72 +61,57 @@ class BaseModel(Model):
     IMPALA-based echo-state network.
     """
 
-    def __init__(self, image_size, depth_in, state_size=1024, cnn_class=None):
+    def __init__(self, image_size, depth_in, cnn_class=None):
         super().__init__()
-        self._state_size = state_size
         self.impala_cnn = (cnn_class or ImpalaCNN)(image_size, depth_in)
-        self.state_transition = nn.Linear(state_size + 256, state_size)
-        self.state_norm = nn.LayerNorm((state_size,))
-        self.state_mixer = nn.Sequential(
-            nn.Linear(state_size + 256, 256),
+        self.state_mlp = nn.Sequential(
+            nn.Linear(STATE_STACK * STATE_SIZE, 256),
             nn.ReLU(),
             nn.Linear(256, 256),
+            nn.ReLU(),
+        )
+        self.state_mixer = nn.Sequential(
+            nn.Linear(512, 256),
             nn.ReLU(),
             nn.Linear(256, 256),
             nn.ReLU(),
         )
 
-    @property
-    def state_size(self):
-        return self._state_size
-
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
         impala_out = self.impala_cnn(float_obs)
-        return self._forward_with_impala(states, impala_out)
-
-    def _forward_with_impala(self, states, impala_out):
-        concatenated = torch.cat([impala_out, states], dim=-1)
-        new_state = F.relu(self.state_norm(self.state_transition(concatenated)))
+        flat_states = states.view(states.shape[0], -1)
+        states_out = self.state_mlp(flat_states)
+        concatenated = torch.cat([impala_out, states_out], dim=-1)
         mixed = self.state_mixer(concatenated)
-        res = {
-            'base': mixed,
-            'states': new_state,
-        }
-        self.add_fields(res)
-        return res
+        output = {'base': mixed}
+        self.add_fields(output)
+        return output
 
     def add_fields(self, output):
         pass
 
     def run_for_rollout(self, rollout):
-        impala_outs = self._impala_outs(rollout)
-        states = torch.zeros(rollout.batch_size, self.state_size).to(self.device)
+        mixed = self._base_outs(rollout)
         result = rollout.copy()
-        result.states = np.zeros([rollout.num_steps + 1, rollout.batch_size, self.state_size],
-                                 dtype=np.float32)
         result.model_outs = []
-        for t in range(rollout.num_steps):
-            impala_batch = self.tensor(impala_outs[t])
-            model_outs = self._forward_with_impala(states, impala_batch)
-            states = model_outs['states'] * self.tensor(1 - result.dones[t + 1]).view(-1, 1)
-            result.states[t + 1] = states.detach().cpu().numpy()
-            result.model_outs.append(model_outs_to_cpu(model_outs))
-        result.model_outs.append(model_outs_to_cpu(
-            self._forward_with_impala(states, self.tensor(impala_outs[-1]))))
+        for t in range(rollout.num_steps + 1):
+            model_out = {'base': self.tensor(mixed[t])}
+            self.add_fields(model_out)
+            result.model_outs.append(model_outs_to_cpu(model_out))
         return result
 
-    def _impala_outs(self, rollout):
+    def _base_outs(self, rollout):
         batch_size = 128
 
-        def image_samples():
+        def index_samples():
             for t in range(rollout.num_steps + 1):
                 for b in range(rollout.batch_size):
                     yield (t, b)
 
-        def image_batches():
+        def index_batches():
             batch = []
-            for x in image_samples():
+            for x in index_samples():
                 batch.append(x)
                 if len(batch) == batch_size:
                     yield batch
@@ -133,12 +120,17 @@ class BaseModel(Model):
                 yield batch
 
         result = np.zeros([rollout.num_steps + 1, rollout.batch_size, 256], dtype=np.float32)
-        for batch in image_batches():
+        for batch in index_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
             float_obs = torch.from_numpy(images).float() / 255.0
-            outputs = self.impala_cnn(float_obs.to(self.device))
-            for (t, b), output in zip(batch, outputs):
-                result[t, b] = output.detach().cpu().numpy()
+            impala_out = self.impala_cnn(float_obs)
+            states = np.array([rollout.states[t, b] for t, b in batch])
+            flat_states = states.view(states.shape[0], -1)
+            states_out = self.state_mlp(flat_states)
+            concatenated = torch.cat([impala_out, states_out], dim=-1)
+            mixed = self.state_mixer(concatenated).detach().cpu().numpy()
+            for (t, b), base_out in zip(batch, mixed):
+                result[t, b] = base_out
 
         return result
 
