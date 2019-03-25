@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
+from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, NUM_LABELS, STATE_SIZE, STATE_STACK
 
 
 class Model(nn.Module):
@@ -167,6 +167,21 @@ class DiscriminatorModel(BaseModel):
         log_neg_disc = F.logsigmoid(-output['logits'])
         output['prob_pi'] = torch.mean(log_disc)
         output['prob_expert'] = torch.mean(log_neg_disc)
+
+
+class StateClassifier(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.impala_cnn = ImpalaCNN(IMAGE_SIZE, 3)
+        self.final_layer = nn.Linear(256, NUM_LABELS)
+
+    def forward(self, x):
+        mask = np.ones(x.shape[1:], dtype=np.uint8)
+        mask[0:10] = 0.0
+        float_obs = (torch.from_numpy(mask).to(x.device) * x).float() / 255.0
+        features = self.impala_cnn(float_obs)
+        logits = self.final_layer(features)
+        return logits
 
 
 class ImpalaCNN(nn.Module):

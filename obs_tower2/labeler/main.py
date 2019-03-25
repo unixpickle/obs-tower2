@@ -5,12 +5,12 @@ import random
 from PIL import Image
 from flask import Flask, send_file, send_from_directory
 
-from obs_tower2.labels import LabeledImage, load_labeled_images
+from obs_tower2.labels import LabeledImage, load_all_labeled_images
 from obs_tower2.recording import load_all_data
 
 
 app = Flask(__name__, static_url_path='')
-labelled = load_labeled_images()
+labelled = load_all_labeled_images()
 recordings = load_all_data()
 
 

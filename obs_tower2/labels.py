@@ -8,10 +8,16 @@ import os
 from PIL import Image
 
 
-def load_labeled_images(dir_path=os.environ['OBS_TOWER_IMAGE_LABELS']):
+def load_all_labeled_images(dir_path=os.environ['OBS_TOWER_IMAGE_LABELS']):
     pngs = [x for x in os.listdir(dir_path) if x.endswith('.png')]
     names = [png[:-len('.png')] for png in pngs]
     return [LabeledImage.load(dir_path, name) for name in names]
+
+
+def load_labeled_images(**kwargs):
+    images = load_all_labeled_images(**kwargs)
+    return ([x for x in images if x.uid >= 1e8],
+            [x for x in images if x.uid < 1e8])
 
 
 class LabeledImage:
@@ -29,6 +35,7 @@ class LabeledImage:
                  goal):
         self.dir_path = dir_path
         self.name = name
+        self.uid = int(name.split('_')[1])
         self.closed_door = closed_door
         self.locked_door = locked_door
         self.boxed_door = boxed_door
@@ -51,10 +58,12 @@ class LabeledImage:
 
     def save(self, image):
         image.save(self._image_path())
-        labels = [self.closed_door, self.locked_door, self.boxed_door, self.open_door, self.key,
-                  self.box, self.hurtle, self.orb, self.goal]
         with open(os.path.join(self.dir_path, self.name + '.json'), 'w+') as out_file:
-            json.dump(labels, out_file)
+            json.dump(self.pack_labels(), out_file)
+
+    def pack_labels(self):
+        return [self.closed_door, self.locked_door, self.boxed_door, self.open_door, self.key,
+                self.box, self.hurtle, self.orb, self.goal]
 
     def _image_path(self):
         return os.path.join(self.dir_path, self.name + '.png')
