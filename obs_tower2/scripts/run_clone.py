@@ -14,7 +14,7 @@ from obs_tower2.recording import load_data, recording_rollout
 LR = 1e-4
 BATCH = 4
 HORIZON = 64
-EPSILON = 0.1
+EPSILON = 0.0
 
 
 def main():
