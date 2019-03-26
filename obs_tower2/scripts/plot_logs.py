@@ -14,7 +14,7 @@ def main():
         plt.figure()
         for log in logs:
             values = log[key]
-            plt.plot([i * 4096 / 1e6 for i, _ in enumerate(values)], values)
+            plt.plot([i * 4096 / 1e6 for i, _ in enumerate(values)], smooth(values))
         plt.legend(names)
         plt.xlabel('timesteps (1e6)')
         plt.ylabel(key)
@@ -33,11 +33,19 @@ def read_log(log_path):
             if mean_floor is None:
                 mean_floor = floor_num
             else:
-                mean_floor += 0.01 * (floor_num - mean_floor)
+                mean_floor += 0.1 * (floor_num - mean_floor)
         elif 'step' in l:
             entropies.append(float(l.split('entropy=')[1].split(' ')[0]))
             floors.append(mean_floor if mean_floor is not None else 0.0)
     return {'entropy': entropies, 'floor': floors}
+
+
+def smooth(values):
+    value = values[0]
+    for i, x in enumerate(values.copy()):
+        value += 0.1 * (x - value)
+        values[i] = value
+    return values
 
 
 if __name__ == '__main__':
