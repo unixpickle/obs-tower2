@@ -1,12 +1,15 @@
 import os
 import sys
 
-import matplotlib.pyplot as plt
+import matplotlib
+matplotlib.use('Agg')
+
 
 KEYS = ['entropy', 'floor']
 
 
 def main():
+    import matplotlib.pyplot as plt
     paths = sys.argv[1:]
     logs = [read_log(path) for path in paths]
     names = [os.path.basename(path) for path in paths]
