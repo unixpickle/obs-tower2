@@ -24,7 +24,6 @@ class Prierarchy(PPO):
         rollout = self.add_rewards(rollout, prior_rollout)
         advs = rollout.advantages(self.gamma, self.lam)
         targets = advs + rollout.value_predictions()[:-1]
-        advs = (advs - np.mean(advs)) / (1e-8 + np.std(advs))
         actions = rollout.actions()
         log_probs = rollout.log_probs()
         firstterms = None
@@ -52,9 +51,7 @@ class Prierarchy(PPO):
         super_out = self.terms(states, obses, advs, targets, actions, log_probs)
         log_prior = F.log_softmax(prior_logits, dim=-1)
         log_posterior = F.log_softmax(super_out['model_outs']['actor'], dim=-1)
-        kl1 = torch.mean(torch.sum(torch.exp(log_posterior) * (log_posterior - log_prior), dim=-1))
-        kl2 = torch.mean(torch.sum(torch.exp(log_prior) * (log_prior - log_posterior), dim=-1))
-        kl = 0.5 * (kl1 + kl2)
+        kl = torch.mean(torch.sum(torch.exp(log_posterior) * (log_posterior - log_prior), dim=-1))
         kl_loss = kl * self.ent_reg
         super_out['kl'] = kl
         super_out['kl_loss'] = kl_loss
