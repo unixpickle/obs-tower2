@@ -5,7 +5,7 @@ import matplotlib
 matplotlib.use('Agg')
 
 
-KEYS = ['entropy', 'floor']
+KEYS = ['entropy', 'floor', 'explained']
 
 
 def main():
@@ -30,6 +30,7 @@ def read_log(log_path):
     mean_floor = None
     entropies = []
     floors = []
+    explained = []
     for l in lines:
         if 'floor=' in l:
             floor_num = float(l.split('floor=')[-1])
@@ -40,7 +41,8 @@ def read_log(log_path):
         elif 'step' in l:
             entropies.append(float(l.split('entropy=')[1].split(' ')[0]))
             floors.append(mean_floor if mean_floor is not None else 0.0)
-    return {'entropy': entropies, 'floor': floors}
+            explained.append(float(l.split('explained=')[1].split(' ')[0]))
+    return {'entropy': entropies, 'floor': floors, 'explained': explained}
 
 
 def smooth(values):
