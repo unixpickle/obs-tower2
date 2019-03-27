@@ -67,11 +67,11 @@ def mirror_action(act):
 
 class Augmentation:
     def __init__(self):
-        self.brightness = random.random() * 0.2 + 0.9
-        self.contrast = random.random() * 0.2 + 0.9
-        self.gamma = random.random() * 0.2 + 0.9
-        self.hue = random.random() * 0.2 - 0.1
-        self.saturation = random.random() * 0.2 + 0.9
+        self.brightness = random.random() * 0.1 + 0.95
+        self.contrast = random.random() * 0.1 + 0.95
+        self.gamma = random.random() * 0.1 + 0.95
+        self.hue = random.random() * 0.05
+        self.saturation = random.random() * 0.1 + 0.95
         self.translation = (random.randrange(-2, 3), random.randrange(-2, 3))
 
     def apply(self, image):
