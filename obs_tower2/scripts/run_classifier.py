@@ -9,7 +9,7 @@ import torch.optim as optim
 
 from obs_tower2.labels import load_labeled_images
 from obs_tower2.model import StateClassifier
-from obs_tower2.util import Augmentation
+from obs_tower2.util import Augmentation, mirror_obs
 
 LR = 1e-4
 BATCH = 128
@@ -39,7 +39,10 @@ def classification_loss(model, dataset):
     for _ in range(BATCH):
         aug = Augmentation()
         sample = random.choice(dataset)
-        images.append(np.array(aug.apply(sample.image())))
+        img = np.array(aug.apply(sample.image()))
+        if random.random() < 0.5:
+            img = mirror_obs(img)
+        images.append(img)
         labels.append(sample.pack_labels())
     images = np.array(images, dtype=np.uint8)
     labels = np.array(labels, dtype=np.float32)

@@ -9,7 +9,7 @@ import numpy as np
 from .constants import HUMAN_ACTIONS, IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, STATE_SIZE, STATE_STACK
 from .rollout import Rollout
 from .states import StateFeatures
-from .util import Augmentation
+from .util import Augmentation, mirror_obs, mirror_action
 
 
 def load_all_data(**kwargs):
@@ -32,8 +32,12 @@ def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],
             recording = Recording(path, augment=augment)
             if recording.uid < 1e8:
                 testing.append(recording)
+                if augment:
+                    testing.append(recording.mirror())
             else:
                 training.append(recording)
+                if augment:
+                    training.append(recording.mirror())
     return training, testing
 
 
@@ -69,10 +73,11 @@ def recording_rollout(recordings, batch, horizon):
 
 
 class Recording:
-    def __init__(self, path, augment=False):
+    def __init__(self, path, augment=False, mirrored=False):
         self.path = path
         self.augment = augment
         self.augmentation = None
+        self.mirrored = mirrored
         comps = os.path.basename(path).split('_')
         self.seed = int(comps[0])
         self.uid = int(comps[1])
@@ -81,9 +86,14 @@ class Recording:
         # TODO: load this from JSON, where it should be cached
         # before use.
         self.current_state = [None] * (self.num_steps + 1)
+        if mirrored:
+            self.actions = [mirror_action(a) for a in self.actions]
 
     def sample_augmentation(self):
         self.augmentation = Augmentation()
+
+    def mirror(self):
+        return Recording(self.path, augment=self.augment, mirrored=not self.mirrored)
 
     @property
     def num_steps(self):
@@ -116,6 +126,8 @@ class Recording:
     @functools.lru_cache(maxsize=4)
     def load_frame(self, idx):
         img = Image.open(os.path.join(self.path, '%d.png' % idx))
+        if self.mirrored:
+            img = Image.fromarray(mirror_obs(np.array(img)))
         if self.augment and self.augmentation is not None:
             img = self.augmentation.apply(img)
         return np.array(img)
