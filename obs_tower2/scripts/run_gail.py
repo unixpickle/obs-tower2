@@ -12,9 +12,9 @@ from obs_tower2.util import LogRoller, create_batched_env
 NUM_ENVS = 8
 HORIZON = 512
 BATCH_SIZE = NUM_ENVS * HORIZON // 8
-LR = 3e-5
+LR = 1e-4
 ITERS = 24
-PRIOR_REG = 0.01
+PRIOR_REG = 0.003
 GAE_LAM = 0.95
 GAE_GAMMA = 0.9975
 REWARD_SCALE = 1.0
@@ -24,7 +24,7 @@ GAIL_NUM_ENVS = (HORIZON * NUM_ENVS) // GAIL_HORIZON
 
 
 def main():
-    env = BatchedStateEnv(create_batched_env(NUM_ENVS, augment=True))
+    env = BatchedStateEnv(create_batched_env(NUM_ENVS))
     model = ACModel()
     prior = ACModel()
     discriminator = DiscriminatorModel()
@@ -37,7 +37,7 @@ def main():
     model.to(torch.device('cuda'))
     discriminator.to(torch.device('cuda'))
     prior.to(torch.device('cuda'))
-    train, test = load_data(augment=True)
+    train, test = load_data()
     recordings = train + test
     roller = LogRoller(env, model, HORIZON)
     ppo = Prierarchy(prior, model, gamma=GAE_GAMMA, lam=GAE_LAM, lr=LR, ent_reg=PRIOR_REG)

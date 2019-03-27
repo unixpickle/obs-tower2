@@ -7,7 +7,7 @@ import torch.optim as optim
 
 
 class PPO:
-    def __init__(self, model, epsilon=0.1, gamma=0.99, lam=0.95, lr=1e-4, ent_reg=0.001):
+    def __init__(self, model, epsilon=0.2, gamma=0.99, lam=0.95, lr=1e-4, ent_reg=0.001):
         self.model = model
         self.epsilon = epsilon
         self.gamma = gamma

@@ -14,7 +14,7 @@ from obs_tower2.recording import load_data, recording_rollout
 LR = 1e-4
 BATCH = 4
 HORIZON = 64
-EPSILON = 0.1
+EPSILON = 0.0
 
 
 def main():
@@ -23,7 +23,7 @@ def main():
         model.load_state_dict(torch.load('save_clone.pkl'))
     model.to(torch.device('cuda'))
     optimizer = optim.Adam(model.parameters(), lr=LR)
-    train, test = load_data(augment=True)
+    train, test = load_data()
     for i in itertools.count():
         train_rollout = recording_rollout(train, BATCH, HORIZON)
         test_rollout = recording_rollout(test, BATCH, HORIZON)
