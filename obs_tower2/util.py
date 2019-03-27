@@ -48,6 +48,23 @@ def log_floors(rollout):
                 print('floor=%d' % rollout.infos[t - 1][b]['floor'])
 
 
+def mirror_obs(obs):
+    obs = obs.copy()
+    obs[10:] = obs[10:, ::-1]
+    return obs
+
+
+def mirror_action(act):
+    direction = (act % 18) // 6
+    act -= direction * 6
+    if direction == 1:
+        direction = 2
+    elif direction == 2:
+        direction = 1
+    act += direction * 6
+    return act
+
+
 class Augmentation:
     def __init__(self):
         self.brightness = random.random() * 0.2 + 0.9
