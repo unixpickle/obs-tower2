@@ -32,7 +32,9 @@ class LabeledImage:
                  box,
                  hurtle,
                  orb,
-                 goal):
+                 goal,
+                 box_target,
+                 box_undo):
         self.dir_path = dir_path
         self.name = name
         self.uid = int(name.split('_')[1])
@@ -45,12 +47,16 @@ class LabeledImage:
         self.hurtle = hurtle
         self.orb = orb
         self.goal = goal
+        self.box_target = box_target
+        self.box_undo = box_undo
         self.dir_path = dir_path or os.environ['OBS_TOWER_IMAGE_LABELS']
 
     @classmethod
     def load(cls, dir_path, name):
         with open(os.path.join(dir_path, name + '.json'), 'r') as in_file:
             labels = json.load(in_file)
+            if len(labels) != 11:
+                return None
             return cls(dir_path, name, *labels)
 
     def image(self):
@@ -63,7 +69,7 @@ class LabeledImage:
 
     def pack_labels(self):
         return [self.closed_door, self.locked_door, self.boxed_door, self.open_door, self.key,
-                self.box, self.hurtle, self.orb, self.goal]
+                self.box, self.hurtle, self.orb, self.goal, self.box_target, self.box_undo]
 
     def _image_path(self):
         return os.path.join(self.dir_path, self.name + '.png')
