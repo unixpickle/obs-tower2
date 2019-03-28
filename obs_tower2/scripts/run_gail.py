@@ -6,7 +6,7 @@ from obs_tower2.gail import GAIL
 from obs_tower2.model import ACModel, DiscriminatorModel
 from obs_tower2.prierarchy import Prierarchy
 from obs_tower2.recording import load_data
-from obs_tower2.states import BatchedStateEnv
+from obs_tower2.states import BatchedStateEnv, StateFeatures
 from obs_tower2.util import LogRoller, create_batched_env
 
 NUM_ENVS = 8
@@ -24,7 +24,9 @@ GAIL_NUM_ENVS = (HORIZON * NUM_ENVS) // GAIL_HORIZON
 
 
 def main():
-    env = BatchedStateEnv(create_batched_env(NUM_ENVS, augment=True))
+    state_features = StateFeatures()
+    env = BatchedStateEnv(create_batched_env(NUM_ENVS, augment=True),
+                          state_features=state_features)
     model = ACModel()
     prior = ACModel()
     discriminator = DiscriminatorModel()
@@ -47,6 +49,7 @@ def main():
     gail.outer_loop(ppo,
                     roller,
                     recordings,
+                    state_features,
                     rew_scale=GAIL_REWARD_SCALE,
                     real_rew_scale=REWARD_SCALE,
                     disc_num_steps=HORIZON * NUM_ENVS // BATCH_SIZE,

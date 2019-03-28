@@ -10,6 +10,7 @@ import torch.optim as optim
 from obs_tower2.constants import HUMAN_ACTIONS, NUM_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.recording import load_data, recording_rollout
+from obs_tower2.states import StateFeatures
 
 LR = 1e-4
 BATCH = 4
@@ -22,11 +23,12 @@ def main():
     if os.path.exists('save_clone.pkl'):
         model.load_state_dict(torch.load('save_clone.pkl'))
     model.to(torch.device('cuda'))
+    state_features = StateFeatures()
     optimizer = optim.Adam(model.parameters(), lr=LR)
     train, test = load_data(augment=True)
     for i in itertools.count():
-        train_rollout = recording_rollout(train, BATCH, HORIZON)
-        test_rollout = recording_rollout(test, BATCH, HORIZON)
+        train_rollout = recording_rollout(train, BATCH, HORIZON, state_features)
+        test_rollout = recording_rollout(test, BATCH, HORIZON, state_features)
         test_loss = cloning_loss(model, test_rollout).item()
         train_loss = cloning_loss(model, train_rollout)
         print('step %d: test=%f train=%f' % (i, test_loss, train_loss.item()))

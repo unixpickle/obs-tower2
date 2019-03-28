@@ -16,6 +16,7 @@ class GAIL:
                    ppo,
                    roller,
                    recordings,
+                   state_features,
                    save_path='save.pkl',
                    rew_scale=0.01,
                    real_rew_scale=1.0,
@@ -33,7 +34,8 @@ class GAIL:
             rollout_pi = roller.rollout()
             rollout_expert = recording_rollout(recordings=recordings,
                                                batch=expert_batch,
-                                               horizon=expert_horizon)
+                                               horizon=expert_horizon,
+                                               state_features=state_features)
             terms, last_terms = ppo.inner_loop(self.add_rewards(rollout_pi, rew_scale,
                                                                 real_rew_scale),
                                                **ppo_kwargs)
