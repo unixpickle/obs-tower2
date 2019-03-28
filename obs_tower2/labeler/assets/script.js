@@ -11,6 +11,8 @@ const KEY_X = 120;
 const KEY_H = 104;
 const KEY_R = 114;
 const KEY_G = 103;
+const KEY_T = 116;
+const KEY_U = 117;
 const KEY_ENTER = 13;
 
 async function loadNewSample() {
@@ -25,7 +27,7 @@ function keyPressed(event) {
         saveLabels();
         return;
     }
-    const boxKeys = [KEY_C, KEY_L, KEY_B, KEY_O, KEY_K, KEY_X, KEY_H, KEY_R, KEY_G];
+    const boxKeys = [KEY_C, KEY_L, KEY_B, KEY_O, KEY_K, KEY_X, KEY_H, KEY_R, KEY_G, KEY_T, KEY_U];
     const idx = boxKeys.indexOf(event.which);
     if (idx >= 0) {
         checkboxes[idx].checked = !checkboxes[idx].checked;
