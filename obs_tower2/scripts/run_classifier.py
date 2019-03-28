@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from obs_tower2.labels import load_labeled_images
-from obs_tower2.model import ACModel, StateClassifier
+from obs_tower2.model import StateClassifier
 from obs_tower2.util import Augmentation, mirror_obs
 
 LR = 1e-4
