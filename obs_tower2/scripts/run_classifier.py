@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 
 from obs_tower2.labels import load_labeled_images
-from obs_tower2.model import StateClassifier
+from obs_tower2.model import ACModel, StateClassifier
 from obs_tower2.util import Augmentation, mirror_obs
 
 LR = 1e-4
@@ -19,6 +19,10 @@ def main():
     model = StateClassifier()
     if os.path.exists('save_classifier.pkl'):
         model.load_state_dict(torch.load('save_classifier.pkl'))
+    elif os.path.exists('save_clone.pkl'):
+        agent = ACModel()
+        agent.load_state_dict(torch.load('save_clone.pkl'))
+        model.impala_cnn.load_state_dict(agent.impala_cnn.state_dict())
     model.to(torch.device('cuda'))
     optimizer = optim.Adam(model.parameters(), lr=LR)
     train, test = load_labeled_images()
