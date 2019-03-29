@@ -115,6 +115,8 @@ class Recording:
         return res
 
     def load_frame(self, idx):
+        if idx < 0:
+            idx = 0
         img = Image.open(os.path.join(self.path, '%d.png' % idx))
         if self.mirrored:
             img = Image.fromarray(mirror_obs(np.array(img)))
