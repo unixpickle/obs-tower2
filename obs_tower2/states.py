@@ -65,7 +65,7 @@ class BatchedStateEnv(BatchedWrapper):
 
 
 class StateFeatures:
-    def __init__(self, path='save_class.pkl'):
+    def __init__(self, path='save_classifier.pkl'):
         self.classifier = StateClassifier()
         self.classifier.load_state_dict(torch.load(path))
         self.classifier.to(torch.device('cuda'))
