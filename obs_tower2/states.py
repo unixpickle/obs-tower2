@@ -16,7 +16,8 @@ class StateEnv(gym.Wrapper):
     def reset(self, **kwargs):
         obs = self.env.reset(**kwargs)
         self.prev_states.fill(0)
-        self.prev_states[-1, NUM_ACTIONS + 1:] = self.state_features.features(np.array([obs]))
+        feats = self.state_features.features(np.array([obs])[..., -3:])
+        self.prev_states[-1, NUM_ACTIONS + 1:] = feats
         return (self.prev_states.copy(), obs)
 
     def step(self, action):
@@ -25,7 +26,8 @@ class StateEnv(gym.Wrapper):
         self.prev_states[-1] = np.zeros_like(self.prev_states[-1])
         self.prev_states[-1, action] = 1
         self.prev_states[-1, NUM_ACTIONS] = rew
-        self.prev_states[-1, NUM_ACTIONS + 1:] = self.state_features.features(np.array([obs]))
+        feats = self.state_features.features(np.array([obs])[..., -3:])
+        self.prev_states[-1, NUM_ACTIONS + 1:] = feats
         return (self.prev_states.copy(), obs), rew, done, info
 
 
@@ -40,7 +42,7 @@ class BatchedStateEnv(BatchedWrapper):
 
     def reset_wait(self, sub_batch=0):
         obses = self.env.reset_wait(sub_batch=sub_batch)
-        feats = self.state_features.features(np.array(obses))
+        feats = self.state_features.features(np.array(obses)[..., -3:])
         self.prev_states[sub_batch].fill(0)
         self.prev_states[sub_batch, :, -1, NUM_ACTIONS + 1:] = feats
         return (self.prev_states[sub_batch].copy(), obses)
