@@ -3,7 +3,6 @@ import random
 
 from PIL import Image
 from anyrl.envs import batched_gym_env
-from anyrl.envs.wrappers import FrameStackEnv
 import gym
 import numpy as np
 import torchvision.transforms.functional as TF
@@ -204,3 +203,42 @@ class RandomFloorEnv(gym.Wrapper):
 
     def step(self, action):
         return self.env.step(action)
+
+
+class FrameStackEnv(gym.Wrapper):
+    """
+    An environment that stacks images.
+    The stacking is ordered from oldest to newest.
+    At the beginning of an episode, the first observation
+    is repeated in order to complete the stack.
+    """
+
+    def __init__(self, env, num_images=2):
+        """
+        Create a frame stacking environment.
+        Args:
+          env: the environment to wrap.
+          num_images: the number of images to stack.
+            This includes the current observation.
+        """
+        super().__init__(env)
+        old_space = env.observation_space
+        self.observation_space = gym.spaces.Box(np.repeat(old_space.low, num_images, axis=-1),
+                                                np.repeat(old_space.high, num_images, axis=-1),
+                                                dtype=old_space.dtype)
+        self._num_images = num_images
+        self._history = []
+
+    def reset(self, **kwargs):
+        obs = self.env.reset(**kwargs)
+        self._history = [obs] * self._num_images
+        return self._cur_obs()
+
+    def step(self, action):
+        obs, rew, done, info = self.env.step(action)
+        self._history.append(obs)
+        self._history = self._history[1:]
+        return self._cur_obs(), rew, done, info
+
+    def _cur_obs(self):
+        return np.concatenate(self._history, axis=-1)
