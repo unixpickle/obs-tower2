@@ -1,8 +1,8 @@
-from anyrl.envs.wrappers import BatchedWrapper
 import gym
 import numpy as np
 import torch
 
+from .batched_env import BatchedWrapper
 from .constants import STATE_SIZE, STATE_STACK, NUM_ACTIONS
 from .model import StateClassifier
 
@@ -35,35 +35,28 @@ class BatchedStateEnv(BatchedWrapper):
     def __init__(self, env, state_features=None):
         super().__init__(env)
         self.state_features = state_features or StateFeatures()
-        self.prev_states = np.zeros([env.num_sub_batches, env.num_envs_per_sub_batch,
-                                     STATE_STACK, STATE_SIZE], dtype=np.float32)
-        self.prev_actions = [[None] * env.num_envs_per_sub_batch
-                             for _ in range(env.num_sub_batches)]
+        self.prev_states = np.zeros([env.num_envs, STATE_STACK, STATE_SIZE], dtype=np.float32)
 
-    def reset_wait(self, sub_batch=0):
-        obses = self.env.reset_wait(sub_batch=sub_batch)
+    def reset(self):
+        obses = self.env.reset()
         feats = self.state_features.features(np.array(obses)[..., -3:])
-        self.prev_states[sub_batch].fill(0)
-        self.prev_states[sub_batch, :, -1, NUM_ACTIONS + 1:] = feats
-        return (self.prev_states[sub_batch].copy(), obses)
+        self.prev_states.fill(0)
+        self.prev_states[:, -1, NUM_ACTIONS + 1:] = feats
+        return (self.prev_states.copy(), obses)
 
-    def step_start(self, actions, sub_batch=0):
-        self.prev_actions[sub_batch] = actions
-        return self.env.step_start(actions, sub_batch=sub_batch)
-
-    def step_wait(self, sub_batch=0):
-        obses, rews, dones, infos = self.env.step_wait(sub_batch=sub_batch)
-        self.prev_states[sub_batch, :, :-1] = self.prev_states[sub_batch, :, 1:]
+    def step(self, actions):
+        obses, rews, dones, infos = self.env.step(actions)
+        self.prev_states[:, :-1] = self.prev_states[:, 1:]
         features = self.state_features.features(np.array(obses)[..., -3:])
         for i, done in enumerate(dones):
             if done:
-                self.prev_states[sub_batch, i].fill(0.0)
+                self.prev_states[i].fill(0.0)
             else:
-                self.prev_states[sub_batch, i, -1].fill(0.0)
-                self.prev_states[sub_batch, i, -1, self.prev_actions[sub_batch][i]] = 1.0
-                self.prev_states[sub_batch, i, -1, NUM_ACTIONS] = rews[i]
-        self.prev_states[sub_batch, :, -1, NUM_ACTIONS + 1:] = features
-        return (self.prev_states[sub_batch].copy(), obses), rews, dones, infos
+                self.prev_states[i, -1].fill(0.0)
+                self.prev_states[i, -1, actions[i]] = 1.0
+                self.prev_states[i, -1, NUM_ACTIONS] = rews[i]
+        self.prev_states[:, -1, NUM_ACTIONS + 1:] = features
+        return (self.prev_states.copy(), obses), rews, dones, infos
 
 
 class StateFeatures:

@@ -9,7 +9,6 @@ from .rollout import Rollout
 
 class Roller:
     def __init__(self, batched_env, model, num_steps):
-        assert batched_env.num_sub_batches == 1, 'multiple sub-batches not supported'
         self.batched_env = batched_env
         self.model = model
         self.num_steps = num_steps
@@ -18,16 +17,15 @@ class Roller:
         self._prev_dones = None
 
     def reset(self):
-        self.batched_env.reset_start()
-        self._prev_states, self._prev_obs = self.batched_env.reset_wait()
+        self._prev_states, self._prev_obs = self.batched_env.reset()
         self._prev_states = np.array(self._prev_states)
         self._prev_obs = np.array(self._prev_obs)
-        self._prev_dones = np.zeros([self.batched_env.num_envs_per_sub_batch], dtype=np.bool)
+        self._prev_dones = np.zeros([self.batched_env.num_envs], dtype=np.bool)
 
     def rollout(self):
         if self._prev_obs is None:
             self.reset()
-        batch = self.batched_env.num_envs_per_sub_batch
+        batch = self.batched_env.num_envs
         states = np.zeros((self.num_steps + 1,) + self._prev_states.shape, dtype=np.float32)
         obses = np.zeros((self.num_steps + 1,) + self._prev_obs.shape, dtype=self._prev_obs.dtype)
         rews = np.zeros([self.num_steps, batch], dtype=np.float32)
@@ -39,8 +37,7 @@ class Roller:
             obses[t] = self._prev_obs
             dones[t] = self._prev_dones
             model_out = self.model.step(self._prev_states, self._prev_obs)
-            self.batched_env.step_start(model_out['actions'])
-            step_result = self.batched_env.step_wait()
+            step_result = self.batched_env.step(model_out['actions'])
             (step_states, step_obs), step_rews, step_dones, step_infos = step_result
             self._prev_states = np.array(step_states)
             self._prev_obs = np.array(step_obs)

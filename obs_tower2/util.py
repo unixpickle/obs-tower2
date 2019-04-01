@@ -2,12 +2,12 @@ import os
 import random
 
 from PIL import Image
-from anyrl.envs import batched_gym_env
 import gym
 import numpy as np
 import torchvision.transforms.functional as TF
 
-from .constants import HUMAN_ACTIONS
+from .batched_env import BatchedGymEnv
+from .constants import HUMAN_ACTIONS, IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS
 from .roller import Roller
 
 
@@ -18,8 +18,12 @@ def big_obs(obs, info):
 
 
 def create_batched_env(num_envs, **kwargs):
-    return batched_gym_env([lambda i=i: create_single_env(i, **kwargs)
-                            for i in range(num_envs)])
+    env_fns = [lambda i=i: create_single_env(i, **kwargs) for i in range(num_envs)]
+    return BatchedGymEnv(gym.spaces.Discrete(NUM_ACTIONS),
+                         gym.spaces.Box(low=0, high=0xff,
+                                        shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH),
+                                        dtype=np.uint8),
+                         env_fns)
 
 
 def create_single_env(idx, clear=True, key_reward=False, augment=False, rand_floor=False):
