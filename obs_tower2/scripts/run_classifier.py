@@ -9,7 +9,7 @@ import torch.optim as optim
 
 from obs_tower2.labels import load_labeled_images
 from obs_tower2.model import StateClassifier
-from obs_tower2.util import Augmentation, mirror_obs
+from obs_tower2.util import Augmentation, atomic_save, mirror_obs
 
 LR = 1e-4
 BATCH = 128
@@ -30,7 +30,7 @@ def main():
         train_loss.backward()
         optimizer.step()
         if not i % 100:
-            torch.save(model.state_dict(), 'save_classifier.pkl')
+            atomic_save(model.state_dict(), 'save_classifier.pkl')
 
 
 def classification_loss(model, dataset):

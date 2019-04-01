@@ -5,6 +5,7 @@ import torch
 import torch.optim as optim
 
 from .recording import recording_rollout
+from .util import atomic_save
 
 
 class GAIL:
@@ -46,8 +47,8 @@ class GAIL:
             print('step %d: clipped=%f entropy=%f explained=%f %sloss=%f' %
                   (i, last_terms['clip_frac'], terms['entropy'], terms['explained'],
                    ('' if 'kl' not in terms else 'kl=%f ' % terms['kl']), disc_loss))
-            torch.save(ppo.model.state_dict(), save_path)
-            torch.save(self.discriminator.state_dict(), disc_save_path)
+            atomic_save(ppo.model.state_dict(), save_path)
+            atomic_save(self.discriminator.state_dict(), disc_save_path)
 
     def add_rewards(self, rollout_pi, rew_scale, real_rew_scale):
         result = rollout_pi.copy()

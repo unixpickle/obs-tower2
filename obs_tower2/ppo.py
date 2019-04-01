@@ -5,6 +5,8 @@ import torch
 import torch.nn.functional as F
 import torch.optim as optim
 
+from .util import atomic_save
+
 
 class PPO:
     def __init__(self, model, epsilon=0.2, gamma=0.99, lam=0.95, lr=1e-4, ent_reg=0.001):
@@ -19,7 +21,7 @@ class PPO:
         for i in itertools.count():
             terms, last_terms = self.inner_loop(roller.rollout(), **kwargs)
             self.print_outer_loop(i, terms, last_terms)
-            torch.save(self.model.state_dict(), save_path)
+            atomic_save(self.model.state_dict(), save_path)
 
     def print_outer_loop(self, i, terms, last_terms):
         print('step %d: clipped=%f entropy=%f explained=%f' %

@@ -11,6 +11,7 @@ from obs_tower2.constants import HUMAN_ACTIONS, NUM_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.recording import load_data, recording_rollout
 from obs_tower2.states import StateFeatures
+from obs_tower2.util import atomic_save
 
 LR = 1e-4
 BATCH = 4
@@ -36,7 +37,7 @@ def main():
         train_loss.backward()
         optimizer.step()
         if not i % 100:
-            torch.save(model.state_dict(), 'save_clone.pkl')
+            atomic_save(model.state_dict(), 'save_clone.pkl')
 
 
 def cloning_loss(model, rollout):

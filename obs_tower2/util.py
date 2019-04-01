@@ -5,6 +5,7 @@ from PIL import Image
 import gym
 import gym.spaces
 import numpy as np
+import torch
 import torchvision.transforms.functional as TF
 
 from .batched_env import BatchedGymEnv
@@ -67,6 +68,11 @@ def mirror_action(act):
         direction = 1
     act += direction * 6
     return act
+
+
+def atomic_save(obj, path):
+    torch.save(obj, path + '.tmp')
+    os.rename(path + '.tmp', path)
 
 
 class Augmentation:
