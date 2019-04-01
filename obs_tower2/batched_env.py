@@ -38,6 +38,8 @@ class BatchedGymEnv(BatchedEnv):
             child_pipe.close()
             self._procs.append(proc)
             self._pipes.append(pipe)
+        for pipe in self._pipes:
+            self._recv_pipe(pipe)
 
     @property
     def num_envs(self):
@@ -46,28 +48,22 @@ class BatchedGymEnv(BatchedEnv):
     def reset(self):
         for pipe in self._pipes:
             pipe.send(('reset', None))
-        try:
-            return np.array([self.recv_pipe(pipe) for pipe in self._pipes])
-        except EOFError:
-            raise RuntimeError('worker has died')
+        return np.array([self._recv_pipe(pipe) for pipe in self._pipes])
 
     def step(self, actions):
         for pipe, action in zip(self._pipes, actions):
             pipe.send(('step', action))
-        try:
-            obses = []
-            rews = []
-            dones = []
-            infos = []
-            for pipe in self._pipes:
-                obs, rew, done, info = self._recv_pipe(pipe)
-                obses.append(obs)
-                rews.append(rew)
-                dones.append(done)
-                infos.append(info)
-            return np.array(obses), np.array(rews), np.array(dones), infos
-        except EOFError:
-            raise RuntimeError('exception on worker')
+        obses = []
+        rews = []
+        dones = []
+        infos = []
+        for pipe in self._pipes:
+            obs, rew, done, info = self._recv_pipe(pipe)
+            obses.append(obs)
+            rews.append(rew)
+            dones.append(done)
+            infos.append(info)
+        return np.array(obses), np.array(rews), np.array(dones), infos
 
     def close(self):
         for pipe in self._pipes:
@@ -79,6 +75,7 @@ class BatchedGymEnv(BatchedEnv):
     def _worker(pipe, env_str):
         try:
             env = cloudpickle.loads(env_str)()
+            pipe.send((None, None))
             try:
                 while True:
                     cmd, arg = pipe.recv()
@@ -95,7 +92,10 @@ class BatchedGymEnv(BatchedEnv):
 
     @staticmethod
     def _recv_pipe(pipe):
-        value, exc = pipe.recv()
+        try:
+            value, exc = pipe.recv()
+        except EOFError:
+            raise RuntimeError('worker has died')
         if exc is not None:
             raise exc
         return value

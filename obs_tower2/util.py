@@ -3,6 +3,7 @@ import random
 
 from PIL import Image
 import gym
+import gym.spaces
 import numpy as np
 import torchvision.transforms.functional as TF
 
