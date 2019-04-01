@@ -24,7 +24,7 @@ def run_episode(env, model):
     state, obs = env.reset()
     floor = 0
     while True:
-        output = model.step(state, np.array([obs]))
+        output = model.step(np.array([state]), np.array([obs]))
         (state, obs), rew, done, info = env.step(output['actions'][0])
         if rew == 1.0:
             floor += 1
