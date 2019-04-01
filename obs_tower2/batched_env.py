@@ -82,7 +82,10 @@ class BatchedGymEnv(BatchedEnv):
                     if cmd == 'reset':
                         pipe.send((env.reset(), None))
                     elif cmd == 'step':
-                        pipe.send((env.step(arg), None))
+                        obs, rew, done, info = env.step(arg)
+                        if done:
+                            obs = env.reset()
+                        pipe.send(((obs, rew, done, info), None))
                     elif cmd == 'close':
                         return
             finally:
