@@ -29,7 +29,7 @@ def main():
     prior.to(torch.device('cuda'))
     roller = LogRoller(env, model, HORIZON)
     ppo = Prierarchy(prior, model, gamma=GAE_GAMMA, lam=GAE_LAM, lr=LR, ent_reg=PRIOR_REG)
-    ppo.outer_loop(roller, num_steps=ITERS, batch_size=BATCH_SIZE)
+    ppo.outer_loop(roller, num_steps=ITERS, batch_size=BATCH_SIZE, save_path='save_tail.pkl')
 
 
 if __name__ == '__main__':
