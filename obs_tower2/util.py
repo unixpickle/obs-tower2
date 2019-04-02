@@ -159,7 +159,9 @@ class TimeRewardEnv(gym.Wrapper):
         obs, rew, done, info = self.env.step(action)
         mid_line = obs[7]
         if rew != 1.0 and np.sum(mid_line == 0) < np.sum(self.mid_line == 0):
-            rew += 0.1
+            if 'extra_reward' not in info:
+                info['extra_reward'] = 0.0
+            info['extra_reward'] += 0.1
         self.mid_line = mid_line
         return obs, rew, done, info
 

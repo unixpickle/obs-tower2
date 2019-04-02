@@ -28,6 +28,8 @@ class StateEnv(gym.Wrapper):
         self.prev_states[-1, NUM_ACTIONS] = rew
         feats = self.state_features.features(np.array([obs])[..., -3:])
         self.prev_states[-1, NUM_ACTIONS + 1:] = feats
+        if 'extra_reward' in info:
+            rew += info['extra_reward']
         return (self.prev_states.copy(), obs), rew, done, info
 
 
@@ -56,6 +58,9 @@ class BatchedStateEnv(BatchedWrapper):
                 self.prev_states[i, -1, actions[i]] = 1.0
                 self.prev_states[i, -1, NUM_ACTIONS] = rews[i]
         self.prev_states[:, -1, NUM_ACTIONS + 1:] = features
+        for i, info in enumerate(infos):
+            if 'extra_reward' in info:
+                rews[i] += info['extra_reward']
         return (self.prev_states.copy(), obses), rews, dones, infos
 
 
