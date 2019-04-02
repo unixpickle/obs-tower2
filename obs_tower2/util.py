@@ -211,7 +211,7 @@ class RandomFloorEnv(gym.Wrapper):
         super().__init__(env)
 
     def reset(self, **kwargs):
-        self.env.floor(random.randrange(25))
+        self.env.floor(random.randrange(10, 15))
         return self.env.reset(**kwargs)
 
     def step(self, action):
