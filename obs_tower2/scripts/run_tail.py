@@ -18,7 +18,7 @@ GAE_GAMMA = 0.9975
 
 
 def main():
-    env = BatchedStateEnv(create_batched_env(NUM_ENVS, rand_floor=True))
+    env = BatchedStateEnv(create_batched_env(NUM_ENVS, start=8, rand_floor=True))
     model = ACModel()
     prior = ACModel()
     if os.path.exists('save_tail.pkl'):

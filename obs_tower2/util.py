@@ -19,8 +19,8 @@ def big_obs(obs, info):
     return res
 
 
-def create_batched_env(num_envs, **kwargs):
-    env_fns = [lambda i=i: create_single_env(i, **kwargs) for i in range(num_envs)]
+def create_batched_env(num_envs, start=0, **kwargs):
+    env_fns = [lambda i=i: create_single_env(i + start, **kwargs) for i in range(num_envs)]
     return BatchedGymEnv(gym.spaces.Discrete(NUM_ACTIONS),
                          gym.spaces.Box(low=0, high=0xff,
                                         shape=(IMAGE_SIZE, IMAGE_SIZE, IMAGE_DEPTH),
