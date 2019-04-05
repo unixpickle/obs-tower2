@@ -4,9 +4,10 @@ import random
 import numpy as np
 import torch
 
+from obs_tower2.constants import HUMAN_ACTIONS
 from obs_tower2.model import ACModel
 from obs_tower2.states import StateEnv
-from obs_tower2.util import big_obs, create_single_env
+from obs_tower2.util import create_single_env
 
 
 def main():
@@ -25,7 +26,7 @@ def main():
             while True:
                 output = model.step(np.array([state]), np.array([obs]))
                 action = output['actions'][0]
-                actions.append(action)
+                actions.append(HUMAN_ACTIONS[action])
                 with open('hang.json', 'w+') as out_file:
                     json.dump({'actions': actions, 'seed': seed, 'floor': floor}, out_file)
                 (state, obs), rew, done, info = env.step(action)
