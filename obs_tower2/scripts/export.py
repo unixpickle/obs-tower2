@@ -13,13 +13,18 @@ def main():
     def image_fn():
         env = StateEnv(create_single_env(random.randrange(15, 20), clear=False))
         model = ACModel()
-        state = torch.load('save.pkl', map_location='cpu')
-        model.load_state_dict(state)
+        tail_model = ACModel()
+        model.load_state_dict(torch.load('save.pkl', map_location='cpu'))
+        tail_model.load_state_dict(torch.load('save_tail.pkl', map_location='cpu'))
         model.to(torch.device('cuda'))
+        tail_model.to(torch.device('cuda'))
         state, obs = env.reset()
+        floor = 0
         while True:
-            output = model.step(np.array([state]), np.array([obs]))
+            output = (model if floor < 10 else tail_model).step(np.array([state]), np.array([obs]))
             (state, obs), rew, done, info = env.step(output['actions'][0])
+            if rew == 1.0:
+                floor += 1
             yield big_obs(obs[..., -3:], info)
             if done:
                 break
