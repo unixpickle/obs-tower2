@@ -19,8 +19,8 @@ def main():
             seed = random.randrange(100)
             floor = random.randrange(5, 10)
             actions = []
-            env.seed(seed)
-            env.floor(floor)
+            env.unwrapped.seed(seed)
+            env.unwrapped.floor(floor)
             state, obs = env.reset()
             while True:
                 output = model.step(np.array([state]), np.array([obs]))
