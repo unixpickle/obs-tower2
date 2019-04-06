@@ -40,6 +40,12 @@ def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],
     return training, testing
 
 
+def sample_recordings(recordings, count):
+    weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
+    weights /= np.sum(weights)
+    return [recordings[np.random.choice(len(recordings), p=weights)] for _ in range(count)]
+
+
 def recording_rollout(recordings, batch, horizon, state_features):
     """
     Create a rollout of segments from recordings.
@@ -53,10 +59,7 @@ def recording_rollout(recordings, batch, horizon, state_features):
                       dones=np.zeros([horizon + 1, batch], dtype=np.float32),
                       infos=[[{} for _ in range(batch)] for _ in range(horizon)],
                       model_outs=[{'actions': [None] * batch} for _ in range(horizon + 1)])
-    weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
-    weights /= np.sum(weights)
-    for b in range(batch):
-        recording = recordings[np.random.choice(len(recordings), p=weights)]
+    for b, recording in enumerate(sample_recordings(recordings, batch)):
         recording.sample_augmentation()
         t0 = random.randrange(recording.num_steps - horizon - 1)
         rollout.obses[:, b], rollout.states[:, b] = recording.obses_and_states(t0, horizon + 1,

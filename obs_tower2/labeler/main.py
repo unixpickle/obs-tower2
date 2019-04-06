@@ -6,7 +6,7 @@ from PIL import Image
 from flask import Flask, send_file, send_from_directory
 
 from obs_tower2.labels import LabeledImage, load_all_labeled_images
-from obs_tower2.recording import load_all_data
+from obs_tower2.recording import load_all_data, sample_recordings
 
 
 app = Flask(__name__, static_url_path='')
@@ -49,7 +49,7 @@ def handle_save(name, labels):
 
 def sample_new_name():
     while True:
-        rec = random.choice(recordings)
+        rec = sample_recordings(recordings, 1)[0]
         frame = random.randrange(rec.num_steps)
         name = '%d_%d_%d' % (rec.seed, rec.uid, frame)
         if any([x for x in labelled if x.name == name]):
