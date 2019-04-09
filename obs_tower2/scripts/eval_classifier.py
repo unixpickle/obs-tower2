@@ -23,11 +23,11 @@ def main():
             if value == (outputs[i] > 0):
                 correct[i] += 1
     for i, label in enumerate(LABELS):
-        correct = correct[i] / len(dataset)
+        correct_frac = correct[i] / len(dataset)
         baseline = 1 - counts[i] / len(dataset)
-        normalized = (correct - baseline) / (1 - baseline)
+        normalized = (correct_frac - baseline) / (1 - baseline)
         print('%s: %f%% (%f%% from baseline %f%%)' %
-              (label, 100 * normalized, 100 * correct, 100 * baseline))
+              (label, 100 * normalized, 100 * correct_frac, 100 * baseline))
 
 
 if __name__ == '__main__':
