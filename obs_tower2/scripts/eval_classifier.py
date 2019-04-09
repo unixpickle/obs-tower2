@@ -23,9 +23,11 @@ def main():
             if value == (outputs[i] > 0):
                 correct[i] += 1
     for i, label in enumerate(LABELS):
-        print('%s: %f%% (baseline %f%%)' % (label,
-                                            100 * (correct[i] / len(dataset)),
-                                            100 * (1 - counts[i] / len(dataset))))
+        correct = correct[i] / len(dataset)
+        baseline = 1 - counts[i] / len(dataset)
+        normalized = (correct - baseline) / (1 - baseline)
+        print('%s: %f%% (%f%% from baseline %f%%)' %
+              (label, 100 * normalized, 100 * correct, 100 * baseline))
 
 
 if __name__ == '__main__':
