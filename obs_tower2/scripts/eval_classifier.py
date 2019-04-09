@@ -15,7 +15,8 @@ def main():
     counts = [0] * NUM_LABELS
     correct = [0] * NUM_LABELS
     for datum in dataset:
-        outputs = model(torch.from_numpy(np.array(datum.image())).to(device)).detach().cpu().numpy()
+        inputs = torch.from_numpy(np.array(datum.image())[None]).to(device)
+        outputs = model(inputs).detach().cpu().numpy()
         for i, value in enumerate(datum.pack_labels()):
             if value:
                 counts[i] += 1
