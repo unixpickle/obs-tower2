@@ -14,11 +14,11 @@ def main():
     env = StateEnv(create_single_env(random.randrange(15, 20), clear=False))
     try:
         model = ACModel()
-        model.load_state_dict(torch.load('save.pkl', map_location='cpu'))
+        model.load_state_dict(torch.load('save_tail.pkl', map_location='cpu'))
         model.to(torch.device('cuda'))
         while True:
             seed = random.randrange(100)
-            floor = random.randrange(5, 10)
+            floor = random.randrange(10, 15)
             actions = []
             env.unwrapped.seed(seed)
             env.unwrapped.floor(floor)
