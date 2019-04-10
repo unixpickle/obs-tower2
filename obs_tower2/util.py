@@ -5,6 +5,7 @@ from PIL import Image
 import gym
 import gym.spaces
 import numpy as np
+from obstacle_tower_env import ObstacleTowerEnv
 import torch
 import torchvision.transforms.functional as TF
 
@@ -28,9 +29,8 @@ def create_batched_env(num_envs, start=0, **kwargs):
                          env_fns)
 
 
-def create_single_env(idx, clear=True, key_reward=False, augment=False, rand_floor=False):
-    from obstacle_tower_env import ObstacleTowerEnv
-    env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
+def create_single_env(idx, clear=True, augment=False, rand_floor=False):
+    env = TimeRewardEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
     if rand_floor:
         env = RandomFloorEnv(env)
     if augment:
@@ -39,10 +39,7 @@ def create_single_env(idx, clear=True, key_reward=False, augment=False, rand_flo
     env = HumanActionEnv(env)
     if clear:
         env = ClearInfoEnv(env)
-    if key_reward:
-        env = KeyRewardEnv(env)
     env = FloorTrackEnv(env)
-    env = TimeRewardEnv(env)
     return env
 
 
@@ -107,6 +104,27 @@ class LogRoller(Roller):
         return result
 
 
+class TimeRewardEnv(ObstacleTowerEnv):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.last_time = None
+
+    def reset(self):
+        self.last_time = None
+        obs = super().reset()
+        return obs
+
+    def _single_step(self, info):
+        extra_reward = 0.0
+        if self.last_time is not None:
+            if info.vector_observations[0][6] > self.last_time:
+                extra_reward = 0.1
+        self.last_time = info.vector_observations[0][6]
+        obs, rew, done, info = super()._single_step(info)
+        info['extra_reward'] = extra_reward
+        return obs, rew, done, info
+
+
 class AugmentEnv(gym.Wrapper):
     def __init__(self, env):
         super().__init__(env)
@@ -131,8 +149,11 @@ class ClearInfoEnv(gym.Wrapper):
         return self.env.reset(**kwargs)
 
     def step(self, action):
-        obs, rew, done, _ = self.env.step(action)
-        return obs, rew, done, {}
+        obs, rew, done, info = self.env.step(action)
+        new_info = {}
+        if 'extra_reward' in info:
+            new_info['extra_reward'] = info['extra_reward']
+        return obs, rew, done, new_info
 
 
 class HumanActionEnv(gym.ActionWrapper):
@@ -143,50 +164,6 @@ class HumanActionEnv(gym.ActionWrapper):
 
     def action(self, act):
         return self.actions[act]
-
-
-class TimeRewardEnv(gym.Wrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        self.mid_line = None
-
-    def reset(self, **kwargs):
-        obs = self.env.reset(**kwargs)
-        self.mid_line = obs[7]
-        return obs
-
-    def step(self, action):
-        obs, rew, done, info = self.env.step(action)
-        mid_line = obs[7]
-        if rew != 1.0 and np.sum(mid_line == 0) < np.sum(self.mid_line == 0):
-            if 'extra_reward' not in info:
-                info['extra_reward'] = 0.0
-            info['extra_reward'] += 0.1
-        self.mid_line = mid_line
-        return obs, rew, done, info
-
-
-class KeyRewardEnv(gym.Wrapper):
-    def __init__(self, env, reward=10.0):
-        super().__init__(env)
-        self.key_reward = reward
-        self.top_line = None
-
-    def reset(self, **kwargs):
-        obs = self.env.reset(**kwargs)
-        self.top_line = obs[3]
-        return obs
-
-    def step(self, action):
-        obs, rew, done, info = self.env.step(action)
-        top_line = obs[3]
-        if not (top_line == self.top_line).all():
-            info['extra_reward'] = self.key_reward
-        else:
-            info['extra_reward'] = 0.0
-        rew += info['extra_reward']
-        self.top_line = top_line
-        return obs, rew, done, info
 
 
 class FloorTrackEnv(gym.Wrapper):
