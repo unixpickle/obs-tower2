@@ -115,14 +115,14 @@ class TimeRewardEnv(ObstacleTowerEnv):
         return obs
 
     def _single_step(self, info):
-        obs, rew, done, info = super()._single_step(info)
+        obs, rew, done, final_info = super()._single_step(info)
         extra_reward = 0.0
         if self.last_time is not None:
             if rew != 1.0 and info.vector_observations[0][6] > self.last_time:
                 extra_reward = 0.1
         self.last_time = info.vector_observations[0][6]
-        info['extra_reward'] = extra_reward
-        return obs, rew, done, info
+        final_info['extra_reward'] = extra_reward
+        return obs, rew, done, final_info
 
 
 class AugmentEnv(gym.Wrapper):
