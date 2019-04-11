@@ -21,6 +21,8 @@ def main():
             seeds = [random.randrange(100) for _ in range(3)]
             floors = [random.randrange(10, 15) for _ in range(3)]
             act_seqs = [[], [], []]
+            seeds[1] = 58
+            floors[1] = 10
             for seed, floor, actions in zip(seeds, floors, act_seqs):
                 env.unwrapped.seed(seed)
                 env.unwrapped.floor(floor)
