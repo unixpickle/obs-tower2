@@ -32,8 +32,7 @@ def main():
                     with open('hang.json', 'w+') as out_file:
                         json.dump({'seeds': seeds, 'floors': floors, 'actions': act_seqs}, out_file)
                     (state, obs), rew, done, info = env.step(action)
-                    if done or rew == 1.0:
-                        print('ended episode: rew=%f' % rew)
+                    if done:
                         break
         finally:
             env.close()
