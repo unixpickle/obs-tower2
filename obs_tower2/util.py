@@ -115,12 +115,12 @@ class TimeRewardEnv(ObstacleTowerEnv):
         return obs
 
     def _single_step(self, info):
+        obs, rew, done, info = super()._single_step(info)
         extra_reward = 0.0
         if self.last_time is not None:
-            if info.vector_observations[0][6] > self.last_time:
+            if rew != 1.0 and info.vector_observations[0][6] > self.last_time:
                 extra_reward = 0.1
         self.last_time = info.vector_observations[0][6]
-        obs, rew, done, info = super()._single_step(info)
         info['extra_reward'] = extra_reward
         return obs, rew, done, info
 
