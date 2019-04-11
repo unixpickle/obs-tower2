@@ -18,8 +18,8 @@ def main():
     for i in itertools.count():
         env = StateEnv(create_single_env(i % 16, clear=False))
         try:
-            seeds = [random.randrange(100), 58, random.randrange(100)]
-            floors = [random.randrange(10, 15), 10, random.randrange(10, 15)]
+            seeds = [random.randrange(100) for _ in range(3)]
+            floors = [random.randrange(10, 15) for _ in range(3)]
             act_seqs = [[], [], []]
             for seed, floor, actions in zip(seeds, floors, act_seqs):
                 env.unwrapped.seed(seed)
