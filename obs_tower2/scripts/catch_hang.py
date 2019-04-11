@@ -10,6 +10,8 @@ from obs_tower2.model import ACModel
 from obs_tower2.states import StateEnv
 from obs_tower2.util import create_single_env
 
+NUM_EPS = 4
+
 
 def main():
     model = ACModel()
@@ -18,9 +20,9 @@ def main():
     for i in itertools.count():
         env = StateEnv(create_single_env(i % 16, clear=False))
         try:
-            seeds = [random.randrange(100) for _ in range(3)]
-            floors = [random.randrange(10, 15) for _ in range(3)]
-            act_seqs = [[], [], []]
+            seeds = [random.randrange(100) for _ in range(NUM_EPS)]
+            floors = [random.randrange(10, 15) for _ in range(NUM_EPS)]
+            act_seqs = [[] for _ in range(NUM_EPS)]
             for seed, floor, actions in zip(seeds, floors, act_seqs):
                 env.unwrapped.seed(seed)
                 env.unwrapped.floor(floor)
