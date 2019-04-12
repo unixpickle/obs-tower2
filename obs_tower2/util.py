@@ -29,10 +29,10 @@ def create_batched_env(num_envs, start=0, **kwargs):
                          env_fns)
 
 
-def create_single_env(idx, clear=True, augment=False, rand_floor=False):
+def create_single_env(idx, clear=True, augment=False, rand_floors=None):
     env = TimeRewardEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
-    if rand_floor:
-        env = RandomFloorEnv(env)
+    if rand_floors is not None:
+        env = RandomFloorEnv(env, rand_floors)
     if augment:
         env = AugmentEnv(env)
     env = FrameStackEnv(env)
@@ -184,11 +184,12 @@ class FloorTrackEnv(gym.Wrapper):
 
 
 class RandomFloorEnv(gym.Wrapper):
-    def __init__(self, env):
+    def __init__(self, env, floors):
         super().__init__(env)
+        self.floors = floors
 
     def reset(self, **kwargs):
-        self.env.floor(random.randrange(10, 15))
+        self.env.floor(random.randrange(*self.floors))
         return self.env.reset(**kwargs)
 
     def step(self, action):
