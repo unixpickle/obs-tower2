@@ -1,6 +1,7 @@
 const checkboxes = Array.prototype.slice.apply(document.getElementsByTagName('input'));
 const screenshot = document.getElementById('screenshot');
 const nameLabel = document.getElementById('name');
+let previousName = null;
 
 const KEY_C = 99
 const KEY_L = 108;
@@ -14,12 +15,24 @@ const KEY_G = 103;
 const KEY_T = 116;
 const KEY_U = 117;
 const KEY_ENTER = 13;
+const KEY_BACKSPACE = 8;
 
 async function loadNewSample() {
     const name = await (await fetch('/sample')).text();
     checkboxes.forEach((box) => box.checked = false);
     screenshot.src = '/frame/' + name;
+    previousName = nameLabel.textContent || null;
     nameLabel.textContent = name;
+}
+
+async function goToPrevious() {
+    if (!previousName) {
+        return;
+    }
+    checkboxes.forEach((box) => box.checked = false);
+    screenshot.src = '/frame/' + previousName;
+    nameLabel.textContent = previousName;
+    previousName = null;
 }
 
 function keyPressed(event) {
@@ -34,6 +47,13 @@ function keyPressed(event) {
     }
 }
 
+function keyDown(event) {
+    if (event.which == KEY_BACKSPACE) {
+        event.preventDefault();
+        goToPrevious();
+    }
+}
+
 async function saveLabels() {
     const labelData = checkboxes.map((b) => b.checked ? '1' : '0').join(',');
     const path = '/save/' + nameLabel.textContent + '/' + labelData;
@@ -43,4 +63,5 @@ async function saveLabels() {
 
 window.addEventListener('load', loadNewSample);
 window.addEventListener('keypress', keyPressed);
+window.addEventListener('keydown', keyDown);
 document.getElementById('save-button').addEventListener('click', saveLabels);
