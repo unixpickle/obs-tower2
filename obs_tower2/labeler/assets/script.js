@@ -31,18 +31,18 @@ async function updateForName(name) {
 
 async function loadNewSample() {
     const name = await (await fetch('/sample')).text();
-    await updateForName(name);
     previousName = nameLabel.textContent || null;
     nameLabel.textContent = name;
+    await updateForName(name);
 }
 
 async function goToPrevious() {
     if (!previousName) {
         return;
     }
-    await updateForName(previousName);
     nameLabel.textContent = previousName;
     previousName = null;
+    await updateForName(nameLabel.textContent);
 }
 
 function keyPressed(event) {
