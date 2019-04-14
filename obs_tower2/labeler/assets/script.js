@@ -1,6 +1,7 @@
 const checkboxes = Array.prototype.slice.apply(document.getElementsByTagName('input'));
 const screenshot = document.getElementById('screenshot');
 const nameLabel = document.getElementById('name');
+const getsKey = document.getElementById('gets-key');
 let previousName = null;
 
 const KEY_C = 99
@@ -17,10 +18,20 @@ const KEY_U = 117;
 const KEY_ENTER = 13;
 const KEY_BACKSPACE = 8;
 
-async function loadNewSample() {
-    const name = await (await fetch('/sample')).text();
+async function updateForName(name) {
     checkboxes.forEach((box) => box.checked = false);
     screenshot.src = '/frame/' + name;
+    const key = await (await fetch('/key/' + name)).json();
+    if (key) {
+        getsKey.textContent = 'Gets key';
+    } else {
+        getsKey.textContent = 'Does not get key';
+    }
+}
+
+async function loadNewSample() {
+    const name = await (await fetch('/sample')).text();
+    await updateForName(name);
     previousName = nameLabel.textContent || null;
     nameLabel.textContent = name;
 }
@@ -29,8 +40,7 @@ async function goToPrevious() {
     if (!previousName) {
         return;
     }
-    checkboxes.forEach((box) => box.checked = false);
-    screenshot.src = '/frame/' + previousName;
+    await updateForName(previousName);
     nameLabel.textContent = previousName;
     previousName = null;
 }

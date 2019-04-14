@@ -1,4 +1,5 @@
 import io
+import json
 import os
 import random
 
@@ -37,6 +38,11 @@ def handle_frame(name):
     return send_file(buffer, mimetype='image/png')
 
 
+@app.route('/key/<name>')
+def handle_key(name):
+    return json.dumps(check_key(name))
+
+
 @app.route('/save/<name>/<labels>')
 def handle_save(name, labels):
     frame = load_frame(name)
@@ -58,12 +64,26 @@ def sample_new_name():
 
 
 def load_frame(name):
+    rec, frame = find_rec_frame(name)
+    return Image.fromarray(rec.load_frame(frame))
+
+
+def check_key(name):
+    rec, frame = find_rec_frame(name)
+    for i in range(frame + 10, min(frame + 50, rec.num_steps), 5):
+        img = rec.load_frame(i)
+        if not (img[2] == 0).all():
+            return True
+    return False
+
+
+def find_rec_frame(name):
     parts = name.split('_')
     seed = int(parts[0])
     uid = int(parts[1])
     frame = int(parts[2])
     rec = next(x for x in recordings if x.seed == seed and x.uid == uid)
-    return Image.fromarray(rec.load_frame(frame))
+    return rec, frame
 
 
 if __name__ == '__main__':
