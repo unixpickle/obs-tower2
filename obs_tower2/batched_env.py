@@ -122,7 +122,7 @@ class BatchedGymEnv(BatchedEnv):
 
     @staticmethod
     def _queue_get(queue):
-        value, exc = queue.get()  # timeout=10)
+        value, exc = queue.get(timeout=10)
         if exc is not None:
             raise exc
         return value
