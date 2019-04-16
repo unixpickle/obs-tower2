@@ -1,4 +1,5 @@
 const checkboxes = Array.prototype.slice.apply(document.getElementsByTagName('input'));
+const fractions = Array.prototype.slice.apply(document.getElementsByClassName('fraction'));
 const screenshot = document.getElementById('screenshot');
 const nameLabel = document.getElementById('name');
 const getsKey = document.getElementById('gets-key');
@@ -20,12 +21,25 @@ const KEY_BACKSPACE = 8;
 
 async function updateForName(name) {
     checkboxes.forEach((box) => box.checked = false);
+    fractions.forEach((f) => f.textContent = '');
     screenshot.src = '/frame/' + name;
     const key = await (await fetch('/key/' + name)).json();
     if (key) {
         getsKey.textContent = 'Gets key';
     } else {
         getsKey.textContent = 'Does not get key';
+    }
+    const classifications = await (await fetch('/classify/' + name)).json();
+    if (classifications) {
+        for (let i = 0; i < classifications.length; ++i) {
+            const value = classifications[i];
+            fractions[i].textContent = '(' + value.toFixed(3) + ')';
+            if (value > 0.5) {
+                fractions[i].className = 'fraction present';
+            } else {
+                fractions[i].className = 'fraction absent';
+            }
+        }
     }
 }
 

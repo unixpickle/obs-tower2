@@ -33,3 +33,11 @@
 #save-button {
     margin-top: 10px;
 }
+
+.fraction.present {
+    color: #65bcd4;
+}
+
+.fraction.absent {
+    color: #999;
+}
