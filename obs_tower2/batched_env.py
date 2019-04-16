@@ -64,7 +64,7 @@ class BatchedGymEnv(BatchedEnv):
         rews = []
         dones = []
         infos = []
-        for i, res_queue in enumerate(self._result_queues.copy()):
+        for i, q in enumerate(self._result_queues.copy()):
             try:
                 obs, rew, done, info = self._queue_get(q)
             except Empty:
@@ -86,7 +86,7 @@ class BatchedGymEnv(BatchedEnv):
 
     def _restart_worker(self, idx):
         os.system('kill -9 $(ps -o pid= --ppid %d)' % self._procs[idx].pid)
-        self._procs[idx].kill()
+        self._procs[idx].terminate()
         self._procs[idx].join()
         cmd_queue = Queue()
         res_queue = Queue()
