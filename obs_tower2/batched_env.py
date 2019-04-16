@@ -33,40 +33,44 @@ class BatchedGymEnv(BatchedEnv):
     def __init__(self, action_space, obs_space, env_fns):
         super().__init__(action_space, obs_space)
         self._procs = []
-        self._queues = []
+        self._command_queues = []
+        self._result_queues = []
         self._env_fns = env_fns
         for env_fn in env_fns:
-            q = Queue()
-            proc = Process(target=self._worker, args=(q, cloudpickle.dumps(env_fn),))
+            cmd_queue = Queue()
+            res_queue = Queue()
+            proc = Process(target=self._worker,
+                           args=(cmd_queue, res_queue, cloudpickle.dumps(env_fn)))
             proc.start()
             self._procs.append(proc)
-            self._queues.append(q)
-        for queue in self._queues:
-            self._queue_get(queue)
+            self._command_queues.append(cmd_queue)
+            self._result_queues.append(res_queue)
+        for q in self._result_queues:
+            self._queue_get(q)
 
     @property
     def num_envs(self):
         return len(self._procs)
 
     def reset(self):
-        for q in self._queues:
+        for q in self._command_queues:
             q.put(('reset', None))
-        return np.array([self._queue_get(q) for q in self._queues])
+        return np.array([self._queue_get(q) for q in self._result_queues])
 
     def step(self, actions):
-        for q, action in zip(self._queues, actions):
+        for q, action in zip(self._command_queues, actions):
             q.put(('step', action))
         obses = []
         rews = []
         dones = []
         infos = []
-        for i, q in enumerate(self._queues.copy()):
+        for i, res_queue in enumerate(self._result_queues.copy()):
             try:
-                obs, rew, done, info = self._queue_get(q, timeout=10)
+                obs, rew, done, info = self._queue_get(q)
             except Empty:
                 sys.stderr.write('restarting worker %d due to hang.\n' % i)
                 self._restart_worker(i)
-                obs, rew, done, info = self._queue_get(self._queues[i])
+                obs, rew, done, info = self._queue_get(self._result_queues[i])
                 done = True
             obses.append(obs)
             rews.append(rew)
@@ -75,7 +79,7 @@ class BatchedGymEnv(BatchedEnv):
         return np.array(obses), np.array(rews), np.array(dones), infos
 
     def close(self):
-        for q in self._queues:
+        for q in self._command_queues:
             q.put(('close', None))
         for proc in self._procs:
             proc.join()
@@ -84,38 +88,41 @@ class BatchedGymEnv(BatchedEnv):
         os.system('kill -9 $(ps -o pid= --ppid %d)' % self._procs[idx].pid)
         self._procs[idx].kill()
         self._procs[idx].join()
-        q = Queue()
-        proc = Process(target=self._worker, args=(q, cloudpickle.dumps(self._env_fns[idx]),))
+        cmd_queue = Queue()
+        res_queue = Queue()
+        proc = Process(target=self._worker,
+                       args=(cmd_queue, res_queue, cloudpickle.dumps(self._env_fns[idx]),))
         proc.start()
         self._procs[idx] = proc
-        self._queues[idx] = q
-        self._queue_get(q)
+        self._command_queues[idx] = cmd_queue
+        self._result_queues[idx] = res_queue
+        self._queue_get(res_queue)
 
     @staticmethod
-    def _worker(pipe, env_str):
+    def _worker(cmd_queue, res_queue, env_str):
         try:
             env = cloudpickle.loads(env_str)()
-            pipe.put((None, None))
+            res_queue.put((None, None))
             try:
                 while True:
-                    cmd, arg = pipe.get()
+                    cmd, arg = cmd_queue.get()
                     if cmd == 'reset':
-                        pipe.put((env.reset(), None))
+                        res_queue.put((env.reset(), None))
                     elif cmd == 'step':
                         obs, rew, done, info = env.step(arg)
                         if done:
                             obs = env.reset()
-                        pipe.put(((obs, rew, done, info), None))
+                        res_queue.put(((obs, rew, done, info), None))
                     elif cmd == 'close':
                         return
             finally:
                 env.close()
         except Exception as exc:
-            pipe.put((None, exc))
+            res_queue.put((None, exc))
 
     @staticmethod
-    def _queue_get(queue, timeout=None):
-        value, exc = queue.get(timeout=timeout)
+    def _queue_get(queue):
+        value, exc = queue.get()  # timeout=10)
         if exc is not None:
             raise exc
         return value
