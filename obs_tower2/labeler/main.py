@@ -5,14 +5,24 @@ import random
 
 from PIL import Image
 from flask import Flask, send_file, send_from_directory
+import numpy as np
+import torch
 
 from obs_tower2.labels import LabeledImage, load_all_labeled_images
+from obs_tower2.model import StateClassifier
 from obs_tower2.recording import load_all_data, sample_recordings
 
 
 app = Flask(__name__, static_url_path='')
 labelled = load_all_labeled_images()
 recordings = load_all_data()
+
+CLASSIFIER_PATH = '../scripts/save_classifier.pkl'
+if os.path.exists(CLASSIFIER_PATH):
+    classifier = StateClassifier()
+    classifier.load_state_dict(torch.load(CLASSIFIER_PATH, map_location='cpu'))
+else:
+    classifier = None
 
 
 @app.route('/assets/<path:path>')
@@ -41,6 +51,16 @@ def handle_frame(name):
 @app.route('/key/<name>')
 def handle_key(name):
     return json.dumps(check_key(name))
+
+
+@app.route('/classify/<name>')
+def handle_classify(name):
+    if classifier is None:
+        return 'null'
+    img = np.array(load_frame(name))
+    inputs = torch.from_numpy(img[None])
+    outputs = torch.sigmoid(classifier(inputs)).detach().numpy()[0]
+    return json.dumps([float(x) for x in outputs])
 
 
 @app.route('/save/<name>/<labels>')
