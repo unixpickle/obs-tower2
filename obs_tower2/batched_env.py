@@ -1,5 +1,8 @@
 from abc import ABC, abstractmethod, abstractproperty
-from multiprocessing import Pipe, Process
+from multiprocessing import Process, Queue
+import os
+from queue import Empty
+import sys
 
 import cloudpickle
 import numpy as np
@@ -30,35 +33,41 @@ class BatchedGymEnv(BatchedEnv):
     def __init__(self, action_space, obs_space, env_fns):
         super().__init__(action_space, obs_space)
         self._procs = []
-        self._pipes = []
+        self._queues = []
+        self._env_fns = env_fns
         for env_fn in env_fns:
-            pipe, child_pipe = Pipe()
-            proc = Process(target=self._worker, args=(child_pipe, cloudpickle.dumps(env_fn),))
+            q = Queue()
+            proc = Process(target=self._worker, args=(q, cloudpickle.dumps(env_fn),))
             proc.start()
-            child_pipe.close()
             self._procs.append(proc)
-            self._pipes.append(pipe)
-        for pipe in self._pipes:
-            self._recv_pipe(pipe)
+            self._queues.append(q)
+        for queue in self._queues:
+            self._queue_get(queue)
 
     @property
     def num_envs(self):
         return len(self._procs)
 
     def reset(self):
-        for pipe in self._pipes:
-            pipe.send(('reset', None))
-        return np.array([self._recv_pipe(pipe) for pipe in self._pipes])
+        for q in self._queues:
+            q.put(('reset', None))
+        return np.array([self._queue_get(q) for q in self._queues])
 
     def step(self, actions):
-        for pipe, action in zip(self._pipes, actions):
-            pipe.send(('step', action))
+        for q, action in zip(self._queues, actions):
+            q.put(('step', action))
         obses = []
         rews = []
         dones = []
         infos = []
-        for pipe in self._pipes:
-            obs, rew, done, info = self._recv_pipe(pipe)
+        for i, q in enumerate(self._queues.copy()):
+            try:
+                obs, rew, done, info = self._queue_get(q, timeout=10)
+            except Empty:
+                sys.stderr.write('restarting worker %d due to hang.\n' % i)
+                self._restart_worker(i)
+                obs, rew, done, info = self._queue_get(self._queues[i])
+                done = True
             obses.append(obs)
             rews.append(rew)
             dones.append(done)
@@ -66,39 +75,47 @@ class BatchedGymEnv(BatchedEnv):
         return np.array(obses), np.array(rews), np.array(dones), infos
 
     def close(self):
-        for pipe in self._pipes:
-            pipe.send(('close', None))
+        for q in self._queues:
+            q.put(('close', None))
         for proc in self._procs:
             proc.join()
+
+    def _restart_worker(self, idx):
+        os.system('kill -9 $(ps -o pid= --ppid %d)' % self._procs[idx].pid)
+        self._procs[idx].kill()
+        self._procs[idx].join()
+        q = Queue()
+        proc = Process(target=self._worker, args=(q, cloudpickle.dumps(self._env_fns[idx]),))
+        proc.start()
+        self._procs[idx] = proc
+        self._queues[idx] = q
+        self._queue_get(q)
 
     @staticmethod
     def _worker(pipe, env_str):
         try:
             env = cloudpickle.loads(env_str)()
-            pipe.send((None, None))
+            pipe.put((None, None))
             try:
                 while True:
-                    cmd, arg = pipe.recv()
+                    cmd, arg = pipe.get()
                     if cmd == 'reset':
-                        pipe.send((env.reset(), None))
+                        pipe.put((env.reset(), None))
                     elif cmd == 'step':
                         obs, rew, done, info = env.step(arg)
                         if done:
                             obs = env.reset()
-                        pipe.send(((obs, rew, done, info), None))
+                        pipe.put(((obs, rew, done, info), None))
                     elif cmd == 'close':
                         return
             finally:
                 env.close()
         except Exception as exc:
-            pipe.send((None, exc))
+            pipe.put((None, exc))
 
     @staticmethod
-    def _recv_pipe(pipe):
-        try:
-            value, exc = pipe.recv()
-        except EOFError:
-            raise RuntimeError('worker has died')
+    def _queue_get(queue, timeout=None):
+        value, exc = queue.get(timeout=timeout)
         if exc is not None:
             raise exc
         return value
