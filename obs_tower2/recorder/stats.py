@@ -4,6 +4,7 @@ Print statistics about the recordings dataset.
 
 from collections import Counter
 import math
+import os
 
 import numpy as np
 
@@ -11,12 +12,20 @@ from obs_tower2.recording import load_data
 
 
 def main():
-    train, _ = load_data()
+    train, test = load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],))
+    print('Train stats:')
+    print_stats(train)
+    print('')
+    print('Test stats:')
+    print_stats(test)
+
+
+def print_stats(data):
     action_counter = Counter()
     total_actions = 0
     floors = []
     rews = []
-    for rec in train:
+    for rec in data:
         for action in rec.actions:
             action_counter.update({action: 1})
             total_actions += 1
@@ -31,7 +40,7 @@ def main():
     print('max floor: %d' % max(floors))
     print('mean reward: %f' % np.mean(rews))
     print('total timesteps: %d' % total_actions)
-    print('total episodes: %d' % len(train))
+    print('total episodes: %d' % len(data))
 
 
 if __name__ == '__main__':
