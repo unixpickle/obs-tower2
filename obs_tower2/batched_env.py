@@ -70,7 +70,7 @@ class BatchedGymEnv(BatchedEnv):
             except Empty:
                 sys.stderr.write('restarting worker %d due to hang.\n' % i)
                 self._restart_worker(i)
-                q = self.result_queues[i]
+                q = self._result_queues[i]
                 self._command_queues[i].put(('reset', None))
                 self._queue_get(q)
                 self._command_queues[i].put(('step', actions[i]))
