@@ -198,7 +198,7 @@ class RandomFloorEnv(gym.Wrapper):
 
     def step(self, action):
         obs, rew, done, info = self.env.step(action)
-        info['start_floor'] = self.env._floor
+        info['start_floor'] = self.unwrapped._floor
         return obs, rew, done, info
 
 
