@@ -31,14 +31,14 @@ def create_batched_env(num_envs, start=0, **kwargs):
 
 def create_single_env(idx, clear=True, augment=False, rand_floors=None):
     env = TimeRewardEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
+    if clear:
+        env = ClearInfoEnv(env)
     if rand_floors is not None:
         env = RandomFloorEnv(env, rand_floors)
     if augment:
         env = AugmentEnv(env)
     env = FrameStackEnv(env)
     env = HumanActionEnv(env)
-    if clear:
-        env = ClearInfoEnv(env)
     env = FloorTrackEnv(env)
     return env
 
@@ -47,7 +47,11 @@ def log_floors(rollout):
     for t in range(1, rollout.num_steps):
         for b in range(rollout.batch_size):
             if rollout.dones[t, b]:
-                print('floor=%d' % rollout.infos[t - 1][b]['floor'])
+                info = rollout.infos[t - 1][b]
+                if 'start_floor' in info:
+                    print('start=%d floor=%d' % (info['start_floor'], info['floor']))
+                else:
+                    print('floor=%d' % info['floor'])
 
 
 def mirror_obs(obs):
@@ -189,11 +193,13 @@ class RandomFloorEnv(gym.Wrapper):
         self.floors = floors
 
     def reset(self, **kwargs):
-        self.env.floor(random.randrange(*self.floors))
+        self.unwrapped.floor(random.randrange(*self.floors))
         return self.env.reset(**kwargs)
 
     def step(self, action):
-        return self.env.step(action)
+        obs, rew, done, info = self.env.step(action)
+        info['start_floor'] = self.env._floor
+        return obs, rew, done, info
 
 
 class FrameStackEnv(gym.Wrapper):
