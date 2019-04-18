@@ -40,7 +40,7 @@ def arg_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument('--min', default=10, type=int)
     parser.add_argument('--max', default=15, type=int)
-    parser.add_argument('--worker_idx', default=8, type=int)
+    parser.add_argument('--worker-idx', default=8, type=int)
     parser.add_argument('--path', default='save_tail.pkl')
     return parser
 
