@@ -89,7 +89,7 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
         if not os.path.exists(p):
             os.mkdir(p)
 
-    dirname = '%d_%d' % (seed, int(random.random() * 1e9))
+    dirname = '%d_%d_0' % (seed, int(random.random() * 1e9))
     tmp_dir = os.path.join(tmp_dir, dirname)
     os.mkdir(tmp_dir)
 
