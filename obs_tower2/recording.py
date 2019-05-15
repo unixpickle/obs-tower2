@@ -16,8 +16,7 @@ def load_all_data(**kwargs):
     return train + test
 
 
-def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],
-                        os.environ['OBS_TOWER_TAIL_RECORDINGS']),
+def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],),
               augment=False):
     training = []
     testing = []
