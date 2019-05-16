@@ -4,7 +4,6 @@ Print statistics about the recordings dataset.
 
 from collections import Counter
 import math
-import os
 
 import numpy as np
 
@@ -12,7 +11,7 @@ from obs_tower2.recording import load_data
 
 
 def main():
-    train, test = load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],))
+    train, test = load_data()
     print('Train stats:')
     print_stats(train)
     print('')
