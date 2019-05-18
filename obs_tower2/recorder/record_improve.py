@@ -27,7 +27,8 @@ def main():
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=random.randrange(11, 20))
     try:
         floors = sum([x == 1.0 for x in rec.rewards])
-        env.floor(rec.floor)
+        if rec.floor:
+            env.floor(rec.floor)
         env.seed(rec.seed)
         env.reset()
         reached_floors = 0
@@ -42,6 +43,7 @@ def main():
                 reached_floors += 1
             if reached_floors == floors:
                 break
+        print('Starting at timestep %d of %d' % (taken_steps, len(rec.actions)))
         record_tail(env, rec, taken_steps)
     finally:
         env.close()
