@@ -12,3 +12,4 @@ for i in range(0, 25):
     key = str(obs.flatten().tolist())
     counter[key] = True
     print('got %d start states' % len(counter))
+    env.close()
