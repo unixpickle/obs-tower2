@@ -80,6 +80,7 @@ class Recording:
         self.seed = int(comps[0])
         self.uid = int(comps[1])
         self.floor = int(comps[2])
+        self.version = comps[3]
         self.actions = self._load_json('actions.json')
         self.rewards = self._load_json('rewards.json')
         if mirrored:
