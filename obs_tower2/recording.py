@@ -95,6 +95,10 @@ class Recording:
     @property
     def num_steps(self):
         return len(self.actions)
+    
+    @property
+    def num_floors(self):
+        return sum(x == 1 for x in self.rewards)
 
     def obses_and_states(self, t0, count, state_features):
         start_time = min(t0 - FRAME_STACK + 1, t0 - STATE_STACK + 1)

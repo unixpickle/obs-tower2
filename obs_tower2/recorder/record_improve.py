@@ -26,11 +26,11 @@ def main():
     rec = Recording(sys.argv[1])
     env = ObstacleTowerEnv(os.environ['OBS_TOWER_PATH'], worker_id=random.randrange(11, 20))
     try:
-        floors = sum([x == 1.0 for x in rec.rewards])
         if rec.floor:
             env.floor(rec.floor)
         env.seed(rec.seed)
         env.reset()
+        num_floors = rec.num_floors
         reached_floors = 0
         taken_steps = 0
         for action, rew in zip(rec.actions, rec.rewards):
@@ -41,9 +41,9 @@ def main():
                 os.exit(1)
             if rew == 1.0:
                 reached_floors += 1
-            if reached_floors == floors:
+            if reached_floors == num_floors:
                 break
-        print('Starting at timestep %d of %d' % (taken_steps, len(rec.actions)))
+        print('Starting at timestep %d of %d' % (taken_steps, rec.num_steps))
         record_tail(env, rec, taken_steps)
     finally:
         env.close()
@@ -79,7 +79,7 @@ def record_tail(obs, env, rec, timestep):
             print('did not solve any floors, aborting.')
             return
 
-        for i in range(timestep + 1, len(rec.actions) + 1):
+        for i in range(timestep + 1, rec.num_steps + 1):
             os.remove(os.path.join(rec.path, '%d.png' % i))
         for i in range(timestep + 1, len(action_log) + 1):
             os.rename(os.path.join(tmp_dir, '%d.png' % i), os.path.join(rec.path, '%d.png' % i))
