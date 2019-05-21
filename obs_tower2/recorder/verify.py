@@ -22,15 +22,11 @@ def main():
         env.seed(rec.seed)
         if rec.floor:
             env.floor(rec.floor)
-        obs = env.reset()
-        obs1 = rec.load_frame(0)
-        if not (obs == obs1).all():
-            print('mismatching first observation')
-            sys.exit(1)
+        env.reset()
         i = 0
         for i, (action, rew) in enumerate(zip(rec.actions, rec.rewards)):
-            real_obs, real_rew, done, _ = env.step(rec.actions[i])
-            if not (real_obs == rec.load_frame(i + 1)).all() or not np.allclose(real_rew, rew):
+            _, real_rew, done, _ = env.step(rec.actions[i])
+            if not np.allclose(real_rew, rew):
                 print('mismatching result at step %d' % i)
                 sys.exit(1)
             if done != (i == rec.num_steps - 1):
