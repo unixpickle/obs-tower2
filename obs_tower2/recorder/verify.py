@@ -25,7 +25,7 @@ def main():
         env.reset()
         i = 0
         for i, (action, rew) in enumerate(zip(rec.actions, rec.rewards)):
-            _, real_rew, done, _ = env.step(rec.actions[i])
+            _, real_rew, done, _ = env.step(action)
             if not np.allclose(real_rew, rew):
                 print('mismatching result at step %d' % i)
                 sys.exit(1)
