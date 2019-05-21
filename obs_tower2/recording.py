@@ -72,6 +72,8 @@ def recording_rollout(recordings, batch, horizon, state_features):
 
 class Recording:
     def __init__(self, path, augment=False, mirrored=False):
+        if path.endswith('/'):
+            path = path[:-1]
         self.path = path
         self.augment = augment
         self.augmentation = None
@@ -95,7 +97,7 @@ class Recording:
     @property
     def num_steps(self):
         return len(self.actions)
-    
+
     @property
     def num_floors(self):
         return sum(x == 1 for x in self.rewards)
