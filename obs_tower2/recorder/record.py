@@ -58,6 +58,9 @@ class EnvInteractor(SimpleImageViewer):
             raise RuntimeError('done')
         return event
 
+    def pause(self):
+        self._paused = True
+
     def paused(self):
         if self.keys[pyglet.window.key.P]:
             self._paused = True

@@ -54,6 +54,7 @@ def main():
 def record_tail(env, rec, timestep):
     obs = rec.load_frame(timestep)
     viewer = EnvInteractor()
+    viewer.pause()
     with tempfile.TemporaryDirectory() as tmp_dir:
         last_time = time.time()
         done = False
