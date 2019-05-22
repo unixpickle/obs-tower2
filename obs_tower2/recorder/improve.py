@@ -36,7 +36,7 @@ def main():
         taken_steps = 0
         for action, rew in zip(rec.actions, rec.rewards):
             taken_steps += 1
-            _, new_rew, done, _ = env.step(action)
+            obs, new_rew, done, info = env.step(action)
             if not np.allclose(rew, new_rew):
                 sys.stderr.write('mismatching reward at step %d (%f vs %f)\n' %
                                  (taken_steps, rew, new_rew))
@@ -46,13 +46,12 @@ def main():
             if reached_floors == num_floors:
                 break
         print('Starting at timestep %d of %d' % (taken_steps, rec.num_steps))
-        record_tail(env, rec, taken_steps)
+        record_tail(obs, info, env, rec, taken_steps)
     finally:
         env.close()
 
 
-def record_tail(env, rec, timestep):
-    obs = rec.load_frame(timestep)
+def record_tail(obs, info, env, rec, timestep):
     viewer = EnvInteractor()
     viewer.pause()
     with tempfile.TemporaryDirectory() as tmp_dir:
