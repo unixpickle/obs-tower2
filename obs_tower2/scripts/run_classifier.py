@@ -93,8 +93,7 @@ def labeled_data(pool, model, dataset):
         img = np.array(aug.apply(sample.image()))
         if random.random() < 0.5:
             img = mirror_obs(img)
-        images.append(img)
-        labels.append(sample.pack_labels())
+        return img
     samples = [random.choice(dataset) for _ in range(BATCH)]
     images = pool.map(load_image, samples)
     labels = [sample.pack_labels for sample in samples]
