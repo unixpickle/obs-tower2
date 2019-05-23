@@ -96,7 +96,7 @@ def labeled_data(pool, model, dataset):
         return img
     samples = [random.choice(dataset) for _ in range(BATCH)]
     images = pool.map(load_image, samples)
-    labels = [sample.pack_labels for sample in samples]
+    labels = [sample.pack_labels() for sample in samples]
     image_tensor = model_tensor(model, np.array(images, dtype=np.uint8))
     label_tensor = model_tensor(model, np.array(labels, dtype=np.float32))
     return image_tensor, label_tensor
