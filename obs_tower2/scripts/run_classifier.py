@@ -106,10 +106,10 @@ def labeled_data(model, dataset):
 def unlabeled_data(model, recordings):
     images = []
     for _ in range(BATCH):
+        rec = random.choice(recordings)
+        img = rec.load_frame(random.randrange(rec.num_steps))
         for _ in range(NUM_AUGMENTATIONS):
             aug = Augmentation()
-            rec = random.choice(recordings)
-            img = rec.load_frame(random.randrange(rec.num_steps))
             img = np.array(aug.apply(img))
             if random.random() < 0.5:
                 img = mirror_obs(img)
