@@ -16,6 +16,7 @@ from obs_tower2.util import Augmentation, atomic_save, mirror_obs
 
 LR = 1e-4
 BATCH = 128
+USE_MIXMATCH = False
 NUM_AUGMENTATIONS = 2
 UNLABELED_WEIGHT = 0.1
 MIXUP_ALPHA = 0.75
@@ -33,12 +34,16 @@ def main():
     thread_pool = Pool(8)
     for i in itertools.count():
         test_loss = classification_loss(thread_pool, model, test).item()
-        mm_loss = mixmatch_loss(model,
-                                *labeled_data(thread_pool, model, train),
-                                *unlabeled_data(thread_pool, model, recordings))
-        print('step %d: test=%f mixmatch=%f' % (i, test_loss, mm_loss.item()))
+        if USE_MIXMATCH:
+            loss = mixmatch_loss(model,
+                                 *labeled_data(thread_pool, model, train),
+                                 *unlabeled_data(thread_pool, model, recordings))
+            print('step %d: test=%f mixmatch=%f' % (i, test_loss, loss.item()))
+        else:
+            loss = classification_loss(thread_pool, model, train)
+            print('step %d: test=%f train=%f' % (i, test_loss, loss.item()))
         optimizer.zero_grad()
-        mm_loss.backward()
+        loss.backward()
         optimizer.step()
         if not i % 100:
             atomic_save(model.state_dict(), 'save_classifier.pkl')
