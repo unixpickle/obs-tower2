@@ -32,7 +32,7 @@ def main():
     recordings, _ = load_data()
     thread_pool = Pool(8)
     for i in itertools.count():
-        test_loss = classification_loss(model, test).item()
+        test_loss = classification_loss(thread_pool, model, test).item()
         mm_loss = mixmatch_loss(model,
                                 *labeled_data(thread_pool, model, train),
                                 *unlabeled_data(thread_pool, model, recordings))
@@ -44,8 +44,8 @@ def main():
             atomic_save(model.state_dict(), 'save_classifier.pkl')
 
 
-def classification_loss(model, dataset):
-    image_tensor, label_tensor = labeled_data(model, dataset)
+def classification_loss(pool, model, dataset):
+    image_tensor, label_tensor = labeled_data(pool, model, dataset)
     logits = model(image_tensor)
     loss = nn.BCEWithLogitsLoss()
     return loss(logits, label_tensor)
