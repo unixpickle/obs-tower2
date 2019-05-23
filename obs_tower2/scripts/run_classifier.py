@@ -18,7 +18,7 @@ LR = 1e-4
 BATCH = 128
 USE_MIXMATCH = False
 NUM_AUGMENTATIONS = 2
-UNLABELED_WEIGHT = 0.025
+UNLABELED_WEIGHT = 0.1
 MIXUP_ALPHA = 0.2
 TEMPERATURE = 0.5
 
@@ -65,7 +65,7 @@ def mixmatch_loss(model, real_images, real_labels, other_images, other_labels):
 
     bce = nn.BCEWithLogitsLoss()
     real_loss = bce(real_out, real_labels)
-    other_loss = torch.mean(torch.pow(other_out - other_labels, 2))
+    other_loss = torch.mean(torch.pow(torch.sigmoid(other_out) - other_labels, 2))
     return real_loss + UNLABELED_WEIGHT * other_loss
 
 
