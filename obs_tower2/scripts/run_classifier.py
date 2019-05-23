@@ -110,10 +110,10 @@ def unlabeled_data(model, recordings):
         img = rec.load_frame(random.randrange(rec.num_steps))
         for _ in range(NUM_AUGMENTATIONS):
             aug = Augmentation()
-            img = np.array(aug.apply(img))
+            img1 = np.array(aug.apply(img))
             if random.random() < 0.5:
-                img = mirror_obs(img)
-            images.append(img)
+                img1 = mirror_obs(img1)
+            images.append(img1)
     image_tensor = model_tensor(model, np.array(images, dtype=np.uint8))
     preds = torch.sigmoid(model(image_tensor)).detach()
     preds = preds.view(BATCH, NUM_AUGMENTATIONS, NUM_LABELS)
