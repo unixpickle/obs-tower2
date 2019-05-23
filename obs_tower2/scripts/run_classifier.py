@@ -117,7 +117,7 @@ def unlabeled_data(model, recordings):
     preds = preds.view(BATCH, NUM_AUGMENTATIONS, NUM_LABELS)
     mixed = torch.mean(preds, dim=1, keepdim=True)
     sharpened = sharpen_predictions(mixed)
-    broadcasted = (sharpened + torch.zeros_like(preds)).view(-1)
+    broadcasted = (sharpened + torch.zeros_like(preds)).view(-1, NUM_LABELS)
     return image_tensor, broadcasted
 
 
