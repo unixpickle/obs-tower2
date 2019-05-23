@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
+from obs_tower2.constants import NUM_LABELS
 from obs_tower2.labels import load_labeled_images
 from obs_tower2.recording import load_data
 from obs_tower2.model import StateClassifier
@@ -79,7 +80,7 @@ def mixup(real_images, real_labels, other_images, other_labels):
         probs.append(min(p, 1 - p))
     prob_tensor = torch.from_numpy(np.array(probs)).to(real_images.device)
     return (real_images + prob_tensor.view(-1, 1, 1, 1) * (other_images - real_images),
-            real_labels + prob_tensor.view(-1, 1, 1, 1) * (other_labels - real_labels))
+            real_labels + prob_tensor.view(-1, 1) * (other_labels - real_labels))
 
 
 def labeled_data(model, dataset):
@@ -113,7 +114,7 @@ def unlabeled_data(model, recordings):
             images.append(img)
     image_tensor = model_tensor(model, np.array(images, dtype=np.uint8))
     preds = torch.sigmoid(model(image_tensor)).detach()
-    preds = preds.view(BATCH, NUM_AUGMENTATIONS)
+    preds = preds.view(BATCH, NUM_AUGMENTATIONS, NUM_LABELS)
     mixed = torch.mean(preds, dim=1, keepdim=True)
     sharpened = sharpen_predictions(mixed)
     broadcasted = (sharpened + torch.zeros_like(preds)).view(-1)
