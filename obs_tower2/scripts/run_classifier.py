@@ -78,9 +78,11 @@ def mixup(real_images, real_labels, other_images, other_labels):
     for _ in range(real_images.shape[0]):
         p = np.random.beta(MIXUP_ALPHA, MIXUP_ALPHA)
         probs.append(min(p, 1 - p))
-    prob_tensor = torch.from_numpy(np.array(probs)).to(real_images.device)
-    return (real_images + prob_tensor.view(-1, 1, 1, 1) * (other_images - real_images),
-            real_labels + prob_tensor.view(-1, 1) * (other_labels - real_labels))
+    prob_tensor = torch.from_numpy(np.array(probs, dtype=np.float32)).to(real_images.device)
+    interp_images = (real_images.float() + prob_tensor.view(-1, 1, 1, 1)
+                     * (other_images - real_images).float())
+    interp_labels = real_labels + prob_tensor.view(-1, 1) * (other_labels - real_labels)
+    return interp_images, interp_labels
 
 
 def labeled_data(model, dataset):
