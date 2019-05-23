@@ -1,4 +1,5 @@
 import itertools
+from multiprocessing.dummy import Pool
 import os
 import random
 
@@ -29,11 +30,12 @@ def main():
     optimizer = optim.Adam(model.parameters(), lr=LR)
     train, test = load_labeled_images()
     recordings, _ = load_data()
+    thread_pool = Pool(8)
     for i in itertools.count():
         test_loss = classification_loss(model, test).item()
         mm_loss = mixmatch_loss(model,
-                                *labeled_data(model, train),
-                                *unlabeled_data(model, recordings))
+                                *labeled_data(thread_pool, model, train),
+                                *unlabeled_data(thread_pool, model, recordings))
         print('step %d: test=%f mixmatch=%f' % (i, test_loss, mm_loss.item()))
         optimizer.zero_grad()
         mm_loss.backward()
@@ -85,27 +87,25 @@ def mixup(real_images, real_labels, other_images, other_labels):
     return interp_images, interp_labels
 
 
-def labeled_data(model, dataset):
-    images = []
-    labels = []
-    for _ in range(BATCH):
+def labeled_data(pool, model, dataset):
+    def load_image(sample):
         aug = Augmentation()
-        sample = random.choice(dataset)
         img = np.array(aug.apply(sample.image()))
         if random.random() < 0.5:
             img = mirror_obs(img)
         images.append(img)
         labels.append(sample.pack_labels())
-    images = np.array(images, dtype=np.uint8)
-    labels = np.array(labels, dtype=np.float32)
-    image_tensor = model_tensor(model, images)
-    label_tensor = model_tensor(model, labels)
+    samples = [random.choice(dataset) for _ in range(BATCH)]
+    images = pool.map(load_image, samples)
+    labels = [sample.pack_labels for sample in samples]
+    image_tensor = model_tensor(model, np.array(images, dtype=np.uint8))
+    label_tensor = model_tensor(model, np.array(labels, dtype=np.float32))
     return image_tensor, label_tensor
 
 
-def unlabeled_data(model, recordings):
-    images = []
-    for _ in range(BATCH):
+def unlabeled_data(pool, model, recordings):
+    def load_image_set(_):
+        img_set = []
         rec = random.choice(recordings)
         img = rec.load_frame(random.randrange(rec.num_steps))
         for _ in range(NUM_AUGMENTATIONS):
@@ -113,7 +113,9 @@ def unlabeled_data(model, recordings):
             img1 = np.array(aug.apply(img))
             if random.random() < 0.5:
                 img1 = mirror_obs(img1)
-            images.append(img1)
+            img_set.append(img1)
+        return img_set
+    images = [x for y in pool.map(load_image_set, range(BATCH)) for x in y]
     image_tensor = model_tensor(model, np.array(images, dtype=np.uint8))
     preds = torch.sigmoid(model(image_tensor)).detach()
     preds = preds.view(BATCH, NUM_AUGMENTATIONS, NUM_LABELS)
