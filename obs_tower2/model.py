@@ -128,7 +128,8 @@ class BaseModel(Model):
             float_obs = self.tensor(images).float() / 255.0
             impala_out = self.cnn(float_obs)
             states = self.tensor(np.array([rollout.states[t, b] for t, b in batch]))
-            flat_states = states.view(states.shape[0], -1)
+            small_states = self.state_compress(states)
+            flat_states = small_states.view(states.shape[0], -1)
             states_out = self.state_mlp(flat_states)
             concatenated = torch.cat([impala_out, states_out], dim=-1)
             mixed = self.state_mixer(concatenated).detach().cpu().numpy()
