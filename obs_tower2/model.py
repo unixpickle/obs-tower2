@@ -65,10 +65,8 @@ class BaseModel(Model):
     def __init__(self, cnn_class=None):
         super().__init__()
         self.cnn = (cnn_class or FixupCNN)(IMAGE_SIZE, IMAGE_DEPTH)
+        self.state_compress = nn.Linear(STATE_SIZE, 16)
         self.state_mlp = nn.Sequential(
-            # Compress all the states to be 16 components
-            # before running the stack through an MLP.
-            nn.Conv1d(STATE_SIZE, 16, 1),
             nn.Linear(STATE_STACK * 16, 256),
             nn.ReLU(),
             nn.Linear(256, 256),
@@ -84,7 +82,8 @@ class BaseModel(Model):
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
         impala_out = self.cnn(float_obs)
-        flat_states = states.view(states.shape[0], -1)
+        small_states = self.state_compress(states)
+        flat_states = small_states.view(states.shape[0], -1)
         states_out = self.state_mlp(flat_states)
         concatenated = torch.cat([impala_out, states_out], dim=-1)
         mixed = self.state_mixer(concatenated)
