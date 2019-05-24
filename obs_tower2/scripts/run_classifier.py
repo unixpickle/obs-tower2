@@ -16,10 +16,10 @@ from obs_tower2.util import Augmentation, atomic_save, mirror_obs
 
 LR = 1e-4
 BATCH = 128
-USE_MIXMATCH = False
+USE_MIXMATCH = True
 NUM_AUGMENTATIONS = 2
-UNLABELED_WEIGHT = 0.1
-MIXUP_ALPHA = 0.2
+UNLABELED_WEIGHT = 1
+MIXUP_ALPHA = 0.75
 TEMPERATURE = 0.5
 
 

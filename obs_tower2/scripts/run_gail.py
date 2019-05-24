@@ -35,7 +35,7 @@ def main():
     if os.path.exists('save_disc.pkl'):
         discriminator.load_state_dict(torch.load('save_disc.pkl'))
     else:
-        discriminator.impala_cnn.load_state_dict(model.impala_cnn.state_dict())
+        discriminator.cnn.load_state_dict(model.cnn.state_dict())
     if os.path.exists('save_prior.pkl'):
         prior.load_state_dict(torch.load('save_prior.pkl'))
     model.to(torch.device('cuda'))
