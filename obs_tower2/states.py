@@ -80,5 +80,5 @@ class StateFeatures:
                 res.append([0.0])
         device = next(self.classifier.parameters()).device
         obs_tensor = torch.from_numpy(obses).to(device)
-        class_out = torch.sigmoid(self.classifier(obs_tensor)).detach().cpu().numpy()
+        class_out = self.classifier.features(obs_tensor).detach().cpu().numpy()
         return np.concatenate([np.array(res), class_out], axis=-1)
