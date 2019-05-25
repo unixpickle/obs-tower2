@@ -5,7 +5,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, NUM_LABELS, STATE_SIZE, STATE_STACK
+from .constants import (IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, NUM_LABELS, STATE_FEATURE_SIZE,
+                        STATE_SIZE, STATE_STACK)
 
 
 class Model(nn.Module):
@@ -65,9 +66,9 @@ class BaseModel(Model):
     def __init__(self, cnn_class=None):
         super().__init__()
         self.cnn = (cnn_class or FixupCNN)(IMAGE_SIZE, IMAGE_DEPTH)
-        self.state_compress = nn.Linear(STATE_SIZE, 16)
+        self.state_compress = nn.Linear(STATE_FEATURE_SIZE, 16)
         self.state_mlp = nn.Sequential(
-            nn.Linear(STATE_STACK * 16, 256),
+            nn.Linear(STATE_STACK * (STATE_SIZE - STATE_FEATURE_SIZE + 16), 256),
             nn.ReLU(),
             nn.Linear(256, 256),
             nn.ReLU(),
@@ -81,13 +82,7 @@ class BaseModel(Model):
 
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
-        impala_out = self.cnn(float_obs)
-        small_states = self.state_compress(states)
-        flat_states = small_states.view(states.shape[0], -1)
-        states_out = self.state_mlp(flat_states)
-        concatenated = torch.cat([impala_out, states_out], dim=-1)
-        mixed = self.state_mixer(concatenated)
-        output = {'base': mixed}
+        output = {'base': self._generate_mixed(float_obs, states)}
         self.add_fields(output)
         return output
 
@@ -126,17 +121,22 @@ class BaseModel(Model):
         for batch in index_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
             float_obs = self.tensor(images).float() / 255.0
-            impala_out = self.cnn(float_obs)
             states = self.tensor(np.array([rollout.states[t, b] for t, b in batch]))
-            small_states = self.state_compress(states)
-            flat_states = small_states.view(states.shape[0], -1)
-            states_out = self.state_mlp(flat_states)
-            concatenated = torch.cat([impala_out, states_out], dim=-1)
-            mixed = self.state_mixer(concatenated).detach().cpu().numpy()
+            mixed = self._generate_mixed(float_obs, states).detach().cpu().numpy()
             for (t, b), base_out in zip(batch, mixed):
                 result[t, b] = base_out
 
         return result
+
+    def _generate_mixed(self, float_obs, states):
+        cnn_out = self.cnn(float_obs)
+        idx = STATE_SIZE - STATE_FEATURE_SIZE
+        compressed = self.state_compress(states[..., idx:])
+        small_states = torch.cat([states[..., :idx], compressed], dim=-1)
+        flat_states = small_states.view(states.shape[0], -1)
+        states_out = self.state_mlp(flat_states)
+        concatenated = torch.cat([cnn_out, states_out], dim=-1)
+        return self.state_mixer(concatenated)
 
 
 class ACModel(BaseModel):
