@@ -31,6 +31,7 @@ class EnvInteractor(SimpleImageViewer):
         self.keys = pyglet.window.key.KeyStateHandler()
         self._paused = False
         self._jump = False
+        self._finish_early = False
         self.imshow(np.zeros([168, 168, 3], dtype=np.uint8))
 
     def imshow(self, image):
@@ -55,7 +56,7 @@ class EnvInteractor(SimpleImageViewer):
             event += 3
             self._jump = False
         if self.keys[pyglet.window.key.ESCAPE]:
-            raise RuntimeError('done')
+            self._finish_early = True
         return event
 
     def pause(self):
@@ -67,6 +68,9 @@ class EnvInteractor(SimpleImageViewer):
         elif self.keys[pyglet.window.key.R]:
             self._paused = False
         return self._paused
+
+    def finish_early(self):
+        return self._finish_early
 
     def on_key_press(self, x, y):
         if x == pyglet.window.key.SPACE:
@@ -103,7 +107,7 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
     Image.fromarray(obs).save(os.path.join(tmp_dir, '0.png'))
     i = 1
     last_time = time.time()
-    while not done:
+    while not done and not viewer.finish_early():
         if not viewer.paused():
             action = viewer.get_action()
             action_log.append(action)

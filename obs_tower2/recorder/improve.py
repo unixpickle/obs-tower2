@@ -61,7 +61,7 @@ def record_tail(obs, info, env, rec, timestep):
         reward_log = rec.rewards[:timestep]
         floors = 0
         i = timestep + 1
-        while not done:
+        while not done and not viewer.finish_early():
             if not viewer.paused():
                 action = viewer.get_action()
                 action_log.append(action)
