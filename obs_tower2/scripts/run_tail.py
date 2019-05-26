@@ -21,6 +21,7 @@ GAE_GAMMA = 0.9975
 def main():
     args = arg_parser().parse_args()
     env = BatchedStateEnv(create_batched_env(NUM_ENVS,
+                                             augment=True,
                                              start=args.worker_idx,
                                              rand_floors=(args.min, args.max)))
     model = ACModel()
