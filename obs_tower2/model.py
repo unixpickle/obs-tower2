@@ -65,9 +65,8 @@ class BaseModel(Model):
     def __init__(self, cnn_class=None):
         super().__init__()
         self.cnn = (cnn_class or FixupCNN)(IMAGE_SIZE, IMAGE_DEPTH)
-        self.state_compress = nn.Linear(STATE_SIZE, 16)
         self.state_mlp = nn.Sequential(
-            nn.Linear(STATE_STACK * 16, 256),
+            nn.Linear(STATE_STACK * STATE_SIZE, 256),
             nn.ReLU(),
             nn.Linear(256, 256),
             nn.ReLU(),
@@ -82,8 +81,7 @@ class BaseModel(Model):
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
         impala_out = self.cnn(float_obs)
-        small_states = self.state_compress(states)
-        flat_states = small_states.view(states.shape[0], -1)
+        flat_states = states.view(states.shape[0], -1)
         states_out = self.state_mlp(flat_states)
         concatenated = torch.cat([impala_out, states_out], dim=-1)
         mixed = self.state_mixer(concatenated)
@@ -128,8 +126,7 @@ class BaseModel(Model):
             float_obs = self.tensor(images).float() / 255.0
             impala_out = self.cnn(float_obs)
             states = self.tensor(np.array([rollout.states[t, b] for t, b in batch]))
-            small_states = self.state_compress(states)
-            flat_states = small_states.view(states.shape[0], -1)
+            flat_states = states.view(states.shape[0], -1)
             states_out = self.state_mlp(flat_states)
             concatenated = torch.cat([impala_out, states_out], dim=-1)
             mixed = self.state_mixer(concatenated).detach().cpu().numpy()
@@ -179,14 +176,11 @@ class StateClassifier(nn.Module):
         self.cnn = FixupCNN(IMAGE_SIZE, 3)
         self.final_layer = nn.Linear(256, NUM_LABELS)
 
-    def features(self, x):
+    def forward(self, x):
         mask = np.ones(x.shape[1:], dtype=np.uint8)
         mask[0:10] = 0.0
         float_obs = (torch.from_numpy(mask).to(x.device) * x).float() / 255.0
-        return self.cnn(float_obs)
-
-    def forward(self, x):
-        features = self.features(x)
+        features = self.cnn(float_obs)
         logits = self.final_layer(features)
         return logits
 
