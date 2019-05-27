@@ -6,6 +6,5 @@ NUM_ACTIONS = len(HUMAN_ACTIONS)
 LABELS = ('closed door', 'locked door', 'boxed door', 'open door', 'key', 'box', 'hurtle', 'orb',
           'goal', 'box target', 'box undo')
 NUM_LABELS = len(LABELS)
-STATE_FEATURE_SIZE = 256
-STATE_SIZE = NUM_ACTIONS + 2 + STATE_FEATURE_SIZE
+STATE_SIZE = NUM_ACTIONS + 2 + 256
 STATE_STACK = 50
