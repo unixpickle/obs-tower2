@@ -11,6 +11,7 @@ recording, press escape.
 import json
 import os
 import random
+import shutil
 import time
 
 from PIL import Image
@@ -19,6 +20,7 @@ import numpy as np
 from obstacle_tower_env import ObstacleTowerEnv
 import pyglet.window
 
+from obs_tower2.recording import load_all_data
 from obs_tower2.util import big_obs
 
 RES_DIR = os.environ['OBS_TOWER_RECORDINGS']
@@ -77,6 +79,11 @@ class EnvInteractor(SimpleImageViewer):
             self._jump = True
         return True
 
+    def reset(self):
+        self._jump = False
+        self._paused = False
+        self._finish_early = False
+
 
 def main():
     viewer = EnvInteractor()
@@ -91,12 +98,14 @@ def run_episode(env, viewer):
     record_episode(seed, env, viewer, obs)
 
 
-def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max_steps=None):
+def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max_steps=None,
+                   min_floors=1):
     for p in [tmp_dir, res_dir]:
         if not os.path.exists(p):
             os.mkdir(p)
 
-    dirname = '%d_%d_0_%s' % (seed, int(random.random() * 1e9), env.unwrapped.version)
+    dirname = '%d_%d_%d_%s' % (seed, int(random.random() * 1e9), env.unwrapped._floor or 0,
+                               env.unwrapped.version)
     tmp_dir = os.path.join(tmp_dir, dirname)
     os.mkdir(tmp_dir)
 
@@ -126,6 +135,11 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
         time.sleep(max(0, 1 / 10 - delta))
         last_time = time.time()
 
+    if floors < min_floors:
+        print('Not saving recording.')
+        shutil.rmtree(tmp_dir)
+        return
+
     with open(os.path.join(tmp_dir, 'actions.json'), 'w+') as out:
         json.dump(action_log, out)
     with open(os.path.join(tmp_dir, 'rewards.json'), 'w+') as out:
@@ -134,13 +148,13 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
     os.rename(tmp_dir, os.path.join(res_dir, dirname))
 
 
-def select_seed(res_dir=RES_DIR):
+def select_seed(res_dir=RES_DIR, floor=0):
     if not os.path.exists(res_dir):
         return random.randrange(100)
-    listing = [x for x in os.listdir(res_dir) if not x.startswith('.')]
     counts = {k: 0 for k in range(100)}
-    for x in listing:
-        counts[int(x.split('_')[0])] += 1
+    for rec in load_all_data(dirpaths=(res_dir,)):
+        if rec.floor == floor:
+            counts[rec.seed] += 1
     pairs = list(counts.items())
     min_count = min([x[1] for x in pairs])
     min_seeds = [x[0] for x in pairs if x[1] == min_count]
