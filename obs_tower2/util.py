@@ -39,7 +39,6 @@ def create_single_env(idx, clear=True, augment=False, rand_floors=None):
         env = AugmentEnv(env)
     env = FrameStackEnv(env)
     env = HumanActionEnv(env)
-    env = FloorTrackEnv(env)
     return env
 
 
@@ -49,9 +48,10 @@ def log_floors(rollout):
             if rollout.dones[t, b]:
                 info = rollout.infos[t - 1][b]
                 if 'start_floor' in info:
-                    print('start=%d floor=%d' % (info['start_floor'], info['floor']))
+                    print('start=%d floor=%d' %
+                          (info['start_floor'], info['current_floor'] - info['start_floor']))
                 else:
-                    print('floor=%d' % info['floor'])
+                    print('floor=%d' % info['current_floor'])
 
 
 def mirror_obs(obs):
@@ -158,6 +158,8 @@ class ClearInfoEnv(gym.Wrapper):
         new_info = {}
         if 'extra_reward' in info:
             new_info['extra_reward'] = info['extra_reward']
+        if 'current_floor' in info:
+            new_info['current_floor'] = info['current_floor']
         return obs, rew, done, new_info
 
 
@@ -169,23 +171,6 @@ class HumanActionEnv(gym.ActionWrapper):
 
     def action(self, act):
         return self.actions[act]
-
-
-class FloorTrackEnv(gym.Wrapper):
-    def __init__(self, env):
-        super().__init__(env)
-        self.floor = 0
-
-    def reset(self, **kwargs):
-        self.floor = 0
-        return self.env.reset(**kwargs)
-
-    def step(self, action):
-        obs, rew, done, info = self.env.step(action)
-        if rew == 1.0:
-            self.floor += 1.0
-        info['floor'] = self.floor
-        return obs, rew, done, info
 
 
 class RandomFloorEnv(gym.Wrapper):

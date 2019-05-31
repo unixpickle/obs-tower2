@@ -104,8 +104,8 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
         if not os.path.exists(p):
             os.mkdir(p)
 
-    dirname = '%d_%d_%d_%s' % (seed, int(random.random() * 1e9), env.unwrapped._floor or 0,
-                               env.unwrapped.version)
+    start_floor = env.unwrapped._floor or 0
+    dirname = '%d_%d_%d_%s' % (seed, int(random.random() * 1e9), start_floor, env.unwrapped.version)
     tmp_dir = os.path.join(tmp_dir, dirname)
     os.mkdir(tmp_dir)
 
@@ -121,9 +121,10 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
             action = viewer.get_action()
             action_log.append(action)
             obs, rew, done, info = env.step(action)
-            if rew == 1.0:
-                floors += 1
-                print('solved %d floors' % floors)
+            new_floors = int(info['current_floor']) - start_floor
+            if new_floors != floors:
+                floors = new_floors
+                print('solved %d floor%s' % (floors, '' if floors == 1 else 's'))
             reward_log.append(rew)
             Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
             if max_steps is not None and i >= max_steps and floors > 0:
@@ -135,7 +136,7 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
         time.sleep(max(0, 1 / 10 - delta))
         last_time = time.time()
 
-    if floors < min_floors:
+    if floors < min_floors or (max_steps is not None and i < max_steps):
         print('Not saving recording.')
         shutil.rmtree(tmp_dir)
         return
