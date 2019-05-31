@@ -6,7 +6,6 @@ an agent tends to get stuck.
 import os
 import random
 import sys
-import time
 
 from obstacle_tower_env import ObstacleTowerEnv
 
@@ -29,7 +28,6 @@ def main():
         obs = env.reset()
         viewer.reset()
         record_episode(seed, env, viewer, obs, max_steps=MAX_STEPS)
-        time.sleep(2)
 
 
 if __name__ == '__main__':
