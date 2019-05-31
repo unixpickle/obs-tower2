@@ -114,8 +114,9 @@ class TimeRewardEnv(ObstacleTowerEnv):
         self.last_time = None
 
     def reset(self):
+        config = {"total-floors": 25}
         self.last_time = None
-        obs = super().reset()
+        obs = super().reset(config)
         return obs
 
     def _single_step(self, info):
