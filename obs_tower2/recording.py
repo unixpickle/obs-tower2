@@ -162,7 +162,7 @@ class Recording:
     def truncate(self, max_floor):
         num_steps = 0
         floor = self.floor
-        for rew in range(self.rewards):
+        for rew in self.rewards:
             if rew > 0.99:
                 floor += 1
             if floor == max_floor:
