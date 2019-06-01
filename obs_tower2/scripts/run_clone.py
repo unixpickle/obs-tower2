@@ -9,7 +9,7 @@ import torch.optim as optim
 
 from obs_tower2.constants import HUMAN_ACTIONS, NUM_ACTIONS
 from obs_tower2.model import ACModel
-from obs_tower2.recording import load_data, recording_rollout
+from obs_tower2.recording import load_data, recording_rollout, truncate_recordings
 from obs_tower2.states import StateFeatures
 from obs_tower2.util import atomic_save
 
@@ -17,6 +17,7 @@ LR = 1e-4
 BATCH = 4
 HORIZON = 64
 EPSILON = 0.0
+TRUNCATE = None
 
 
 def main():
@@ -27,6 +28,9 @@ def main():
     state_features = StateFeatures()
     optimizer = optim.Adam(model.parameters(), lr=LR)
     train, test = load_data(augment=True)
+    if TRUNCATE is not None:
+        train = truncate_recordings(train, TRUNCATE)
+        test = truncate_recordings(test, TRUNCATE)
     for i in itertools.count():
         train_rollout = recording_rollout(train, BATCH, HORIZON, state_features)
         test_rollout = recording_rollout(test, BATCH, HORIZON, state_features)

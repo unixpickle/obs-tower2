@@ -39,6 +39,31 @@ def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],),
     return training, testing
 
 
+def truncate_recordings(recordings, max_floor, min_length=300):
+    """
+    Truncate the recordings so that they never exceed a
+    given floor.
+
+    Args:
+        recordings: a list of Recordings.
+        max_floor: the floor which no recording should get
+          up to.
+        min_length: the minimum length of a truncated
+          recording for it to be included in the result.
+
+    Returns:
+        A list of truncated Recordings.
+    """
+    res = []
+    for rec in recordings:
+        if rec.floor < 0:
+            continue
+        trunc = rec.truncate(max_floor)
+        if trunc is not None and trunc.num_steps >= min_length:
+            res.append(trunc)
+    return res
+
+
 def sample_recordings(recordings, count):
     weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
     weights /= np.sum(weights)
@@ -133,6 +158,21 @@ class Recording:
         if self.augment and self.augmentation is not None:
             img = self.augmentation.apply(img)
         return np.array(img)
+
+    def truncate(self, max_floor):
+        num_steps = 0
+        floor = self.floor
+        for rew in range(self.rewards):
+            if rew > 0.99:
+                floor += 1
+            if floor == max_floor:
+                break
+            num_steps += 1
+        res = Recording(self.path, mirrored=self.mirrored)
+        res.augmentation = self.augmentation
+        res.actions = self.actions[:num_steps]
+        res.rewards = self.rewards[:num_steps]
+        return res
 
     def _load_json(self, name):
         path = os.path.join(self.path, name)
