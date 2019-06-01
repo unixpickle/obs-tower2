@@ -61,7 +61,7 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
         new_floors = int(info['current_floor']) - start_floor
         if new_floors != floors[0]:
             floors[0] = new_floors
-            print('solved %d floor%s' % (floors, '' if floors == 1 else 's'))
+            print('solved %d floor%s' % (floors[0], '' if floors[0] == 1 else 's'))
         reward_log.append(rew)
         Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i[0]))
         if done or (max_steps is not None and i[0] >= max_steps and floors[0] > 0):
