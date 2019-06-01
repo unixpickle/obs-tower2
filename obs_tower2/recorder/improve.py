@@ -16,7 +16,7 @@ from obstacle_tower_env import ObstacleTowerEnv
 import pyglet.window
 
 from obs_tower2.recording import Recording
-from obs_tower2.recorder.record import EnvInteractor
+from obs_tower2.recorder.env_interactor import EnvInteractor
 from obs_tower2.util import big_obs
 
 

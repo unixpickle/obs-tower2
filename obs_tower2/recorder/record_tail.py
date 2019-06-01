@@ -9,7 +9,8 @@ import sys
 
 from obstacle_tower_env import ObstacleTowerEnv
 
-from obs_tower2.recorder.record import EnvInteractor, record_episode, select_seed
+from obs_tower2.recorder.env_interactor import EnvInteractor
+from obs_tower2.recorder.record import record_episode, select_seed
 
 MAX_STEPS = 300
 
