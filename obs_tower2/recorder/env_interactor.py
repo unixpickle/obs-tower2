@@ -13,9 +13,11 @@ class EnvInteractor(SimpleImageViewer):
         self._paused = False
         self._jump = False
         self._finish_early = False
+        self._last_image = None
         self.imshow(np.zeros([168, 168, 3], dtype=np.uint8))
 
     def imshow(self, image):
+        self._last_image = image
         was_none = self.window is None
         image = Image.fromarray(image)
         image = image.resize((800, 800))
@@ -79,6 +81,9 @@ class EnvInteractor(SimpleImageViewer):
                 if obs is None:
                     return
                 self.imshow(obs)
+            else:
+                # Needed to run the event loop
+                self.imshow(self._last_image)
             pyglet.clock.tick()
             delta = time.time() - last_time
             time.sleep(max(0, 1 / 10 - delta))
