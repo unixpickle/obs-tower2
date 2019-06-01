@@ -8,12 +8,10 @@ import os
 import random
 import sys
 import tempfile
-import time
 
 from PIL import Image
 import numpy as np
 from obstacle_tower_env import ObstacleTowerEnv
-import pyglet.window
 
 from obs_tower2.recording import Recording
 from obs_tower2.recorder.env_interactor import EnvInteractor
@@ -55,28 +53,24 @@ def record_tail(obs, info, env, rec, timestep):
     viewer = EnvInteractor()
     viewer.pause()
     with tempfile.TemporaryDirectory() as tmp_dir:
-        last_time = time.time()
-        done = False
         action_log = rec.actions[:timestep]
         reward_log = rec.rewards[:timestep]
-        floors = 0
-        i = timestep + 1
-        while not done and not viewer.finish_early():
-            if not viewer.paused():
-                action = viewer.get_action()
-                action_log.append(action)
-                obs, rew, done, info = env.step(action)
-                if rew == 1.0:
-                    floors += 1
-                    print('solved %d floors' % floors)
-                reward_log.append(rew)
-                Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
-                i += 1
-            viewer.imshow(big_obs(obs, info))
-            pyglet.clock.tick()
-            delta = time.time() - last_time
-            time.sleep(max(0, 1 / 10 - delta))
-            last_time = time.time()
+        floors = [0]
+        i = [timestep + 1]
+
+        def step(action):
+            action_log.append(action)
+            obs, rew, done, info = env.step(action)
+            if rew == 1.0:
+                floors[0] += 1
+                print('solved %d floors' % floors[0])
+            reward_log.append(rew)
+            Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i[0]))
+            i[0] += 1
+            return big_obs(obs, info)
+
+        viewer.run_loop(step)
+
         if not floors:
             print('did not solve any floors, aborting.')
             return

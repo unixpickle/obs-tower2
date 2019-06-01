@@ -1,3 +1,5 @@
+import time
+
 from PIL import Image
 from gym.envs.classic_control.rendering import SimpleImageViewer
 import numpy as np
@@ -60,3 +62,24 @@ class EnvInteractor(SimpleImageViewer):
         self._jump = False
         self._paused = False
         self._finish_early = False
+
+    def run_loop(self, step_fn):
+        """
+        Run an environment interaction loop.
+
+        The step_fn will be continually called with
+        actions, and it should return observations.
+
+        When step_fn returns None, the loop is done.
+        """
+        last_time = time.time()
+        while not self.finish_early():
+            if not self.paused():
+                obs = step_fn(self.get_action())
+                if obs is None:
+                    return
+                self.imshow(obs)
+            pyglet.clock.tick()
+            delta = time.time() - last_time
+            time.sleep(max(0, 1 / 10 - delta))
+            last_time = time.time()

@@ -12,11 +12,9 @@ import json
 import os
 import random
 import shutil
-import time
 
 from PIL import Image
 from obstacle_tower_env import ObstacleTowerEnv
-import pyglet.window
 
 from obs_tower2.recording import load_all_data
 from obs_tower2.util import big_obs
@@ -50,34 +48,30 @@ def record_episode(seed, env, viewer, obs, tmp_dir=TMP_DIR, res_dir=RES_DIR, max
     tmp_dir = os.path.join(tmp_dir, dirname)
     os.mkdir(tmp_dir)
 
-    done = False
-    floors = 0
+    Image.fromarray(obs).save(os.path.join(tmp_dir, '0.png'))
+
+    floors = [0]
     action_log = []
     reward_log = []
-    Image.fromarray(obs).save(os.path.join(tmp_dir, '0.png'))
-    i = 1
-    last_time = time.time()
-    while not done and not viewer.finish_early():
-        if not viewer.paused():
-            action = viewer.get_action()
-            action_log.append(action)
-            obs, rew, done, info = env.step(action)
-            new_floors = int(info['current_floor']) - start_floor
-            if new_floors != floors:
-                floors = new_floors
-                print('solved %d floor%s' % (floors, '' if floors == 1 else 's'))
-            reward_log.append(rew)
-            Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i))
-            if max_steps is not None and i >= max_steps and floors > 0:
-                break
-            i += 1
-        viewer.imshow(big_obs(obs, info))
-        pyglet.clock.tick()
-        delta = time.time() - last_time
-        time.sleep(max(0, 1 / 10 - delta))
-        last_time = time.time()
+    i = [1]
 
-    if floors < min_floors or (max_steps is not None and i < max_steps):
+    def step(action):
+        action_log.append(action)
+        obs, rew, done, info = env.step(action)
+        new_floors = int(info['current_floor']) - start_floor
+        if new_floors != floors[0]:
+            floors[0] = new_floors
+            print('solved %d floor%s' % (floors, '' if floors == 1 else 's'))
+        reward_log.append(rew)
+        Image.fromarray(obs).save(os.path.join(tmp_dir, '%d.png' % i[0]))
+        if done or (max_steps is not None and i[0] >= max_steps and floors[0] > 0):
+            return None
+        i[0] += 1
+        return big_obs(obs, info)
+
+    viewer.run_loop(step)
+
+    if floors[0] < min_floors or (max_steps is not None and i[0] < max_steps):
         print('Not saving recording.')
         shutil.rmtree(tmp_dir)
         return
