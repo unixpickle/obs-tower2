@@ -46,7 +46,7 @@ def log_floors(rollout):
     for t in range(1, rollout.num_steps):
         for b in range(rollout.batch_size):
             if rollout.dones[t, b]:
-                info = rollout.infos[t - 1][b]
+                info = rollout.infos[t - 2][b]
                 if 'start_floor' in info:
                     print('start=%d floor=%d' %
                           (info['start_floor'], info['current_floor'] - info['start_floor']))
