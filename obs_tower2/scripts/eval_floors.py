@@ -1,4 +1,5 @@
 import random
+import sys
 
 import numpy as np
 import torch
@@ -9,30 +10,35 @@ from obs_tower2.states import StateEnv
 
 
 def main():
+    if len(sys.argv) != 4:
+        sys.stderr.write('Usage: eval_floors.py <model> <start_floor> <end_floor>\n')
+        sys.exit(1)
+
+    model_path = sys.argv[1]
+    start_floor = int(sys.argv[2])
+    end_floor = int(sys.argv[3])
+
     env = StateEnv(create_single_env(random.randrange(20, 25)))
     model = ACModel()
-    tail_model = ACModel()
-    model.load_state_dict(torch.load('save.pkl', map_location='cpu'))
-    tail_model.load_state_dict(torch.load('save_tail.pkl', map_location='cpu'))
-    tail_model.to(torch.device('cuda'))
+    model.load_state_dict(torch.load(model_path, map_location='cpu'))
+    model.to(torch.device('cuda'))
     for seed in range(100):
-        env.seed(seed)
-        for _ in range(5):
-            print('%d,%d' % (seed, run_episode(env, model, tail_model)))
+        env.unwrapped.seed(seed)
+        for floor in range(start_floor, end_floor):
+            env.unwrapped.floor(floor)
+            print('%d,%d,%d' % (seed, floor, run_episode(env, model)))
 
 
-def run_episode(env, model, tail_model):
+def run_episode(env, model):
     state, obs = env.reset()
-    floor = 0
+    start_floor = env.unwrapped._floor
     while True:
-        m = (model if floor < 10 else tail_model)
-        output = m.step(np.array([state]), np.array([obs]))
+        output = model.step(np.array([state]), np.array([obs]))
         (state, obs), rew, done, info = env.step(output['actions'][0])
-        if rew == 1.0:
-            floor += 1
         if done:
-            break
-    return floor
+            return 0
+        if info['current_floor'] != start_floor:
+            return 1
 
 
 if __name__ == '__main__':
