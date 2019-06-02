@@ -10,9 +10,9 @@ from obs_tower2.util import LogRoller, create_batched_env
 
 NUM_ENVS = 8
 HORIZON = 512
-BATCH_SIZE = NUM_ENVS * HORIZON // 8
+BATCH_SIZE = NUM_ENVS * HORIZON // 16
 LR = 1e-5
-ITERS = 24
+ITERS = 48
 PRIOR_REG = 0.003
 GAE_LAM = 0.95
 GAE_GAMMA = 0.9975
