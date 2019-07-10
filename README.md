@@ -4,8 +4,6 @@ This is my solution to the [Unity Obstacle Tower Challenge](https://www.aicrowd.
 
 # Overview
 
-![Overview Diagram](overview_diagram.svg)
-
 The final agent has the following components. This is what is included in my contest submissions:
 
  * A classifier to tell what objects (e.g. box, door, key) are in an image
@@ -26,6 +24,18 @@ The agent itself is a feedforward model; it contains no recurrent connections. T
  * The probability outputs from a hand-crafted classifier
 
 During behavior cloning and fine-tuning, the agent has little control over what features it can remember from the past. All it has access to is what I thought would be important (e.g. whether or not a box was on the screen). This has obvious drawbacks, but it also has the advantage that the agent will definitely have access to important information. In practice, I found that using an RNN model was not nearly as effective as hand-crafting the agent's memory.
+
+## Step-by-step
+
+ 1. The human creates **recordings**.
+ 2. The human uses the **recordings** to create **labeled images**.
+ 3. The **recordings** and **labeled images** are used to train a **classifier**.
+ 4. The **recordings** and **classifier** are used to train a **cloned prior**.
+ 5. The **cloned prior**, **classifier**, and **environment** are used to train the **agent**.
+
+![Overview Diagram](overview_diagram.svg)
+
+## Codebase overview
 
 This codebase has several components:
 
