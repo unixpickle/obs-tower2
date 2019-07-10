@@ -17,4 +17,8 @@ setup(
     ],
     keywords='ai reinforcement learning',
     packages=['obs_tower2'],
+    install_requires=[
+        'torch',
+        'torchvision',
+    ],
 )
