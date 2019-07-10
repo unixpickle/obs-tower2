@@ -27,11 +27,17 @@ During behavior cloning and fine-tuning, the agent has little control over what 
 
 ## Step-by-step
 
- 1. The human creates **recordings**.
- 2. The human uses the **recordings** to create **labeled images**.
+Here are the steps taken to train the agent:
+
+ 1. The human creates **recordings** by playing the game manually.
+ 2. The human uses the **recordings** to create **labeled images** by classifying images manually.
  3. The **recordings** and **labeled images** are used to train a **classifier**.
  4. The **recordings** and **classifier** are used to train a **cloned prior**.
  5. The **cloned prior**, **classifier**, and **environment** are used to train the **agent**.
+
+## Diagram
+
+The following diagram visually depicts the step-by-step procedure described above:
 
 ![Overview Diagram](overview_diagram.svg)
 
