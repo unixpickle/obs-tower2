@@ -1,3 +1,8 @@
+"""
+Calculate the test performance of a classifier for every
+label separately.
+"""
+
 import numpy as np
 import torch
 

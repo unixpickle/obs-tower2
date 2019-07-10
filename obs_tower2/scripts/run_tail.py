@@ -1,3 +1,17 @@
+"""
+Train an agent with prierarchy from an arbitrary range of
+starting floors.
+
+This is called training a "tail" because, by default, it
+starts training from the 10th floor, i.e. at the tail-end
+of an episode.
+
+This is the main agent training script that you should
+use. The hyper-parameters have been fairly well selected.
+To train a model for floors 0 through 10, simply pass
+arguments --min 0 --max 1.
+"""
+
 import argparse
 import os
 

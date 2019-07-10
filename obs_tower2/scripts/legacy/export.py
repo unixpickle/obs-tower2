@@ -1,3 +1,7 @@
+"""
+Generate a video of an agent playing the game.
+"""
+
 import random
 
 from anyrl.utils.ffmpeg import export_video
@@ -23,12 +27,12 @@ def main():
         while True:
             output = (model if floor < 10 else tail_model).step(np.array([state]), np.array([obs]))
             (state, obs), rew, done, info = env.step(output['actions'][0])
-            if rew == 1.0:
-                floor += 1
+            floor = info['current_floor']
             yield big_obs(obs[..., -3:], info)
             if done:
                 break
         env.close()
+
     export_video('export.mp4', 168, 168, 10, image_fn())
 
 

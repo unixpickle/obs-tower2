@@ -1,3 +1,20 @@
+"""
+Train a prior using behavior cloning.
+
+This produces a file called "save_clone.pkl".
+To use it as a prior, rename or copy the file to be called
+"save_prior.pkl".
+
+On one GPU, behavior cloning may take somewhere between 3
+to 12 hours. You should kill the program once the training
+loss is much lower than the test loss on average, since
+this indicates overfitting. To track when this happens,
+you will likely want to average the training and test
+outputs over a few hundred iterations. I used my sh-avg
+tool (https://github.com/unixpickle/statushub) to do this,
+but that is likely overkill.
+"""
+
 import itertools
 import os
 import random

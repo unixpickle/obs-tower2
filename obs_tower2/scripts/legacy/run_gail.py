@@ -1,3 +1,11 @@
+"""
+Train an agent with generative adversarial imitation
+learning (GAIL).
+
+GAIL did not end up helping very much, and prierarchy
+ended up being enough on its own.
+"""
+
 import os
 
 import torch

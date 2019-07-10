@@ -1,3 +1,11 @@
+"""
+A legacy script for running prierarchy starting at the
+first floor. This alone was not enough to learn very well,
+since the agent had to get very good at reaching the 10th
+floor reliably before it started to master the higher
+floors.
+"""
+
 import os
 
 import torch

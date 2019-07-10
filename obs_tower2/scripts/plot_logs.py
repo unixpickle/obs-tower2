@@ -1,3 +1,14 @@
+"""
+Generate plots for log files produced by training.
+
+Produces a plot for entropy, mean floor, and explained
+variation (of the value function) over time.
+
+Pass a list of log files as arguments, and get out three
+PNG files (entropy.png, floor.png, and explained.png) as
+output.
+"""
+
 import os
 import sys
 

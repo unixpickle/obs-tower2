@@ -1,3 +1,12 @@
+"""
+Check which floor+seed pairs a model is able to solve.
+
+I used an older version of this script to generate some
+targeted recordings when my model wasn't able to solve the
+first ten floors reliably. However, it is unclear if these
+recordings had any real effect in the end.
+"""
+
 import random
 import sys
 

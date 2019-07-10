@@ -1,3 +1,11 @@
+"""
+Script to catch one of the hanging bugs that was present
+in an early version of the environment.
+
+I used this to generate a reproduction that the Unity
+developers could use to find the issue.
+"""
+
 import itertools
 import json
 import random

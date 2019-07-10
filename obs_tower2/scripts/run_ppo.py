@@ -1,3 +1,10 @@
+"""
+Train an agent with raw PPO.
+
+The hyper-parameters have not been tuned very well, and
+the agent does not end up being very good on its own.
+"""
+
 import os
 
 import torch

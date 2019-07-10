@@ -1,3 +1,12 @@
+"""
+Train a classifier to feed into the agent's memory.
+
+By default, this uses the MixMatch semi-supervised
+learning algorithm to improve data efficiency, since there
+are many more frames in the demonstrations than there are
+in the labeled dataset.
+"""
+
 import itertools
 from multiprocessing.dummy import Pool
 import os
