@@ -4,6 +4,8 @@ This is my solution to the [Unity Obstacle Tower Challenge](https://www.aicrowd.
 
 # Overview
 
+![Overview Diagram](overview_diagram.svg)
+
 The final agent has the following components. This is what is included in my contest submissions:
 
  * A classifier to tell what objects (e.g. box, door, key) are in an image

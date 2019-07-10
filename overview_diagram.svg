@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 153 130">
+    <defs>
+        <g id="neural-network">
+            <rect x="0" y="0" width="20" height="20" style="fill: currentColor" />
+
+            <line x1="5" y1="4" x2="15" y2="7" stroke="black" stroke-width="0.5" />
+            <line x1="5" y1="4" x2="15" y2="13" stroke="black" stroke-width="0.5" />
+            <line x1="5" y1="10" x2="15" y2="7" stroke="black" stroke-width="0.5" />
+            <line x1="5" y1="10" x2="15" y2="13" stroke="black" stroke-width="0.5" />
+            <line x1="5" y1="16" x2="15" y2="7" stroke="black" stroke-width="0.5" />
+            <line x1="5" y1="16" x2="15" y2="13" stroke="black" stroke-width="0.5" />
+
+            <circle cx="5" cy="4" r="2" fill="#f8e5a2" />
+            <circle cx="5" cy="10" r="2" fill="#f8e5a2" />
+            <circle cx="5" cy="16" r="2" fill="#f8e5a2" />
+
+            <circle cx="15" cy="7" r="2" fill="#f8e5a2" />
+            <circle cx="15" cy="13" r="2" fill="#f8e5a2" />
+        </g>
+        <g id="prior" style="color: #ed9abb">
+            <use xlink:href="#neural-network" />
+        </g>
+        <g id="classifier" style="color: #46e397">
+            <use xlink:href="#neural-network" />
+        </g>
+        <g id="agent" style="color: #ff6b6b">
+            <use xlink:href="#neural-network" />
+        </g>
+        <g id="human">
+            <rect x="0" y="0" width="20" height="20" fill="#f8e5a2" />
+            <circle id="human-head" cx="10" cy="5" r="3" fill="transparent" stroke="black"
+                    stroke-width="0.5" />
+            <path d="M10,8 v2 h-3 m3,0 h3 m-3,0 v4 l3,4 m-3,-4 l-3,4" fill="transparent"
+                  stroke="black" stroke-width="0.5" />
+        </g>
+        <g id="recordings">
+            <rect x="0" y="0" width="20" height="20" fill="#ed9abb" />
+            <rect x="3" y="5.5" width="14" height="9" fill="#222" />
+            <circle cx="7" cy="10" r="1.8" fill="white" />
+            <circle cx="13" cy="10" r="1.8" fill="white" />
+        </g>
+        <g id="photo">
+            <rect x="0" y="0" width="7" height="8" fill="white" stroke="#d5d5d5"
+                  stroke-width="0.4" />
+            <rect x="1" y="1" width="5" height="5" fill="#65bcd4" />
+        </g>
+        <g id="labeled-images">
+            <rect x="0" y="0" width="20" height="20" fill="#46e397" />
+            <use xlink:href="#photo" transform="translate(4.5, 4)" />
+            <use xlink:href="#photo" transform="translate(6.5, 6)" />
+            <use xlink:href="#photo" transform="translate(8.5, 8)" />
+        </g>
+        <g id="environment">
+            <rect x="0" y="0" width="20" height="20" fill="#65bcd4" />
+            <path d="M9.5,8 q1,-1 0,-2 s-1,-1 0,-2 s0.5,-1 0,-2"
+                  fill="transparent" stroke="black" stroke-width="1" />
+            <path d="M1,0 l-1,1 v3 h1 l1,-1.5 h2 l1,1.5 h1 v-3 l-1,-1 z"
+                  fill="#222" transform="translate(2.5, 7) scale(2.5)" />
+            <circle cx="6" cy="10.5" r="1" fill="#777" />
+            <circle cx="14" cy="10.5" r="1" fill="#777" />
+        </g>
+        <path id="short-arrow" d="M0,0 v6 h1 l-1,1.5 l-1,-1.5 h1 z" stroke="black"
+              stroke-width="0.5" fill="black" />
+    </defs>
+    <use xlink:href="#human" transform="translate(25, 10)" />
+    <use xlink:href="#recordings" transform="translate(10, 40)" />
+    <use xlink:href="#labeled-images" transform="translate(40, 40)" />
+    <use xlink:href="#prior" transform="translate(10, 70)" />
+    <use xlink:href="#classifier" transform="translate(40, 70)" />
+    <use xlink:href="#agent" transform="translate(25, 100)" />
+    <use xlink:href="#environment" transform="translate(55, 100)" />
+    <g id="arrows">
+        <use xlink:href="#short-arrow" transform="translate(34, 32) rotate(45)" />
+        <use xlink:href="#short-arrow" transform="translate(36, 32) rotate(-45)" />
+        <use xlink:href="#short-arrow" transform="translate(31, 50) rotate(-90)" />
+        <use xlink:href="#short-arrow" transform="translate(50, 61)" />
+        <use xlink:href="#short-arrow" transform="translate(32, 62) rotate(-45)" />
+        <use xlink:href="#short-arrow" transform="translate(39, 80) rotate(90)" />
+        <use xlink:href="#short-arrow" transform="translate(20, 61)" />
+        <use xlink:href="#short-arrow" transform="translate(20, 92) rotate(-45)" />
+        <use xlink:href="#short-arrow" transform="translate(50, 92) rotate(45)" />
+        <use xlink:href="#short-arrow" transform="translate(54, 110) rotate(90)" />
+    </g>
+    <g id="legend" transform="translate(90, 10) scale(0.5)"
+       style="font-size: 8px; font-family: sans-serif">
+        <rect id="legend-container" x="0" y="0" width="106" height="180" fill="#f0f0f0" />
+        <g transform="translate(5, 5)">
+            <use xlink:href="#human" />
+            <use xlink:href="#recordings" transform="translate(0, 25)" />
+            <use xlink:href="#labeled-images" transform="translate(0, 50)" />
+            <use xlink:href="#classifier" transform="translate(0, 75)" />
+            <use xlink:href="#prior" transform="translate(0, 100)" />
+            <use xlink:href="#agent" transform="translate(0, 125)" />
+            <use xlink:href="#environment" transform="translate(0, 150)" />
+
+            <text x="25" y="10" alignment-baseline="middle">Human</text>
+            <text x="25" y="35" alignment-baseline="middle">Recordings</text>
+            <text x="25" y="60" alignment-baseline="middle">Labeled images</text>
+            <text x="25" y="85" alignment-baseline="middle">Classifier</text>
+            <text x="25" y="110" alignment-baseline="middle">Cloned prior</text>
+            <text x="25" y="135" alignment-baseline="middle">Agent</text>
+            <text x="25" y="160" alignment-baseline="middle">Environment</text>
+        </g>
+    </g>
+</svg>
