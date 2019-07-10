@@ -9,6 +9,11 @@ from .util import atomic_save
 
 
 class PPO:
+    """
+    A base implementation of Proximal Policy Optimization.
+    See: https://arxiv.org/abs/1707.06347.
+    """
+
     def __init__(self, model, epsilon=0.2, gamma=0.99, lam=0.95, lr=1e-4, ent_reg=0.001):
         self.model = model
         self.epsilon = epsilon
@@ -18,6 +23,9 @@ class PPO:
         self.ent_reg = ent_reg
 
     def outer_loop(self, roller, save_path='save.pkl', **kwargs):
+        """
+        Run training indefinitely, saving periodically.
+        """
         for i in itertools.count():
             terms, last_terms = self.inner_loop(roller.rollout(), **kwargs)
             self.print_outer_loop(i, terms, last_terms)

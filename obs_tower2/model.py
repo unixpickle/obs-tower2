@@ -1,3 +1,8 @@
+"""
+Neural network models for classification, RL, GAIL
+discrimination, etc.
+"""
+
 import math
 
 import numpy as np
@@ -10,7 +15,7 @@ from .constants import IMAGE_DEPTH, IMAGE_SIZE, NUM_ACTIONS, NUM_LABELS, STATE_S
 
 class Model(nn.Module):
     """
-    An RL model or a discriminator.
+    An abstract RL model or a GAIL discriminator.
     """
     @property
     def device(self):
@@ -80,10 +85,10 @@ class BaseModel(Model):
 
     def forward(self, states, observations):
         float_obs = observations.float() / 255.0
-        impala_out = self.cnn(float_obs)
+        cnn_out = self.cnn(float_obs)
         flat_states = states.view(states.shape[0], -1)
         states_out = self.state_mlp(flat_states)
-        concatenated = torch.cat([impala_out, states_out], dim=-1)
+        concatenated = torch.cat([cnn_out, states_out], dim=-1)
         mixed = self.state_mixer(concatenated)
         output = {'base': mixed}
         self.add_fields(output)
@@ -103,6 +108,10 @@ class BaseModel(Model):
         return result
 
     def _base_outs(self, rollout):
+        # Even though we could run the entire batch of
+        # rollouts in one forward pass, doing so may use
+        # too much memory, so we split the rollout up into
+        # mini-batches.
         batch_size = 128
 
         def index_samples():
@@ -124,11 +133,11 @@ class BaseModel(Model):
         for batch in index_batches():
             images = np.array([rollout.obses[t, b] for t, b in batch])
             float_obs = self.tensor(images).float() / 255.0
-            impala_out = self.cnn(float_obs)
+            cnn_out = self.cnn(float_obs)
             states = self.tensor(np.array([rollout.states[t, b] for t, b in batch]))
             flat_states = states.view(states.shape[0], -1)
             states_out = self.state_mlp(flat_states)
-            concatenated = torch.cat([impala_out, states_out], dim=-1)
+            concatenated = torch.cat([cnn_out, states_out], dim=-1)
             mixed = self.state_mixer(concatenated).detach().cpu().numpy()
             for (t, b), base_out in zip(batch, mixed):
                 result[t, b] = base_out
@@ -137,6 +146,12 @@ class BaseModel(Model):
 
 
 class ACModel(BaseModel):
+    """
+    An actor-critic model, which produces actions and
+    value predictions on top of the features from a base
+    model.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_actions = NUM_ACTIONS
@@ -156,6 +171,10 @@ class ACModel(BaseModel):
 
 
 class DiscriminatorModel(BaseModel):
+    """
+    A discriminator for GAIL.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs, cnn_class=MaskedCNN)
         self.discriminator = nn.Linear(256, 1)
@@ -171,6 +190,14 @@ class DiscriminatorModel(BaseModel):
 
 
 class StateClassifier(nn.Module):
+    """
+    A classifier that generates labels to put into the
+    state history.
+
+    The outputs of this classifier are fed as part of the
+    input to the policy.
+    """
+
     def __init__(self):
         super().__init__()
         self.cnn = FixupCNN(IMAGE_SIZE, 3)
@@ -186,6 +213,12 @@ class StateClassifier(nn.Module):
 
 
 class ImpalaCNN(nn.Module):
+    """
+    The CNN architecture used in the IMPALA paper.
+
+    See https://arxiv.org/abs/1802.01561.
+    """
+
     def __init__(self, image_size, depth_in):
         super().__init__()
         layers = []
@@ -211,6 +244,10 @@ class ImpalaCNN(nn.Module):
 
 
 class ImpalaResidual(nn.Module):
+    """
+    A residual block for an IMPALA CNN.
+    """
+
     def __init__(self, depth):
         super().__init__()
         self.conv1 = nn.Conv2d(depth, depth, 3, padding=1)
@@ -287,6 +324,19 @@ class FixupResidual(nn.Module):
 
 
 class MaskedCNN(FixupCNN):
+    """
+    A CNN that ignores the part of the screen that
+    indicates how much time the agent has left.
+
+    This is useful for behavior cloning, where the time
+    remaining should have little influence on behavior.
+    This is especially important because the agent tends
+    to be slower than a real human player, so the agent
+    might get confused when it sees that it's running out
+    of time, since it never saw such a thing happen to a
+    human.
+    """
+
     def forward(self, x):
         mask = np.ones(x.shape[1:], dtype=np.float32)
         mask[6:10] = 0.0

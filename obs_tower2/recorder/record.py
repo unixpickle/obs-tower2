@@ -4,8 +4,8 @@ Record a human demonstration with a simple GUI.
 Use the keyboard to control the player. The arrow keys and
 space bar are all you need.
 
-To pause, press 'p'. To resume, press 'r'. To cancel the
-recording, press escape.
+To pause, press 'p'. To resume, press 'r'. To finish the
+recording before the end of the episode, press escape.
 """
 
 import json

@@ -8,6 +8,17 @@ from .rollout import Rollout
 
 
 class Roller:
+    """
+    A Roller runs a policy on a batched environment and
+    produces rollouts containing the results.
+
+    Args:
+        batched_env: a BatchedEnv implementation.
+        model: a Model with 'actions' in its output dicts.
+        num_steps: the number of timesteps to run per
+          batch of rollouts that are generated.
+    """
+
     def __init__(self, batched_env, model, num_steps):
         self.batched_env = batched_env
         self.model = model

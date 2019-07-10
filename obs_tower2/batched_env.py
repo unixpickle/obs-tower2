@@ -1,3 +1,15 @@
+"""
+Tools for running multiple environments at once.
+
+This code is influenced by openai/baselines and
+unixpickle/anyrl-py, but it was rewritten specifically for
+this contest.
+
+One feature of this code is that it automatically deals
+with environments that hang due to bugs. When this occurs,
+the environment is killed and restarted automatically.
+"""
+
 from abc import ABC, abstractmethod, abstractproperty
 from multiprocessing import Process, Queue
 import os

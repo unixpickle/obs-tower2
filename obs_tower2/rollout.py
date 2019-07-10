@@ -9,7 +9,18 @@ import numpy as np
 
 class Rollout:
     """
-    A batch of trajectory segments.
+    A batch of trajectory segments. These segments record
+    what an agent saw, what actions it took, what rewards
+    it received, etc.
+
+    Rollouts provide a useful representation which can be
+    passed to or produced from anywhere that deals with
+    trajectories. For example, a Rollout can be produced
+    from a series of demonstrations, or it can be produced
+    by running an agent on a batch of environments for a
+    certain number of timesteps. You can pass a Rollout to
+    an RL algorithm like PPO, or you can feed it to a
+    discriminator like the one in GAIL.
 
     The dones, obses, states, and model_outs are one
     timestep longer than the other sequences, for

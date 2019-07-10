@@ -1,5 +1,5 @@
 """
-Labels for supervised classification.
+Labeled data loading for supervised classification.
 """
 
 import json

@@ -6,6 +6,18 @@ from .ppo import PPO
 
 
 class Prierarchy(PPO):
+    """
+    An implementation of "prierarchy".
+
+    This is an algorithm that builds on top of PPO.
+    It replaces the entropy regularization term with a KL
+    term that pulls the policy close to a prior policy.
+
+    I also tried a variant of Prierarchy that adds the KL
+    bonus to the rewards, but it did not help much. To use
+    this option, set kl_coeff to some non-zero value.
+    """
+
     def __init__(self, prior, *args, kl_coeff=0, **kwargs):
         super().__init__(*args, **kwargs)
         self.prior = prior

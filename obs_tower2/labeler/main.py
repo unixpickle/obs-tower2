@@ -1,3 +1,12 @@
+"""
+Web server for the data labeling tool.
+
+This web server looks for a trained classifier in the
+scripts/ directory.
+If such a classifier is found, its outputs are shown as
+part of the web interface.
+"""
+
 import io
 import json
 import os

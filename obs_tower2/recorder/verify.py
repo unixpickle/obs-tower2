@@ -1,5 +1,9 @@
 """
 Make sure a recording plays back properly.
+
+A lot of recordings do not play back deterministically,
+and so will fail this script.
+This is due to some randomness in the environment.
 """
 
 import os

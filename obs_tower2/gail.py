@@ -1,3 +1,11 @@
+"""
+An implementation of Generative Adversarial Imitation
+Learning (GAIL): https://arxiv.org/abs/1606.03476.
+
+This was helpful in my initial experiments before
+prierarchy, but prierarchy alone ended up working better.
+"""
+
 import itertools
 
 import numpy as np

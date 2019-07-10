@@ -1,3 +1,9 @@
+"""
+Get statistics about the classifier dataset.
+
+Counts the instances for each label, etc.
+"""
+
 from obs_tower2.constants import LABELS, NUM_LABELS
 from obs_tower2.labels import load_all_labeled_images
 

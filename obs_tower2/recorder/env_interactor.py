@@ -7,6 +7,11 @@ import pyglet.window
 
 
 class EnvInteractor(SimpleImageViewer):
+    """
+    This class manages the user interface for playing
+    obstacle tower, pausing the game, etc.
+    """
+
     def __init__(self):
         super().__init__(maxwidth=800)
         self.keys = pyglet.window.key.KeyStateHandler()

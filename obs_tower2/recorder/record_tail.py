@@ -1,6 +1,11 @@
 """
 Record part of a demonstration starting at the floor where
 an agent tends to get stuck.
+
+I used an early version of this script to generate a lot
+of recordings before (or at) the 10th floor.
+It is unclear if these recordings actually helped in the
+end.
 """
 
 import os

@@ -1,3 +1,8 @@
+"""
+Environment wrappers and helpful functions that do not fit
+nicely into any other file.
+"""
+
 import os
 import random
 
@@ -15,12 +20,25 @@ from .roller import Roller
 
 
 def big_obs(obs, info):
+    """
+    Big obs takes a retro observation and an info
+    dictionary and produces a higher resolution
+    observation with the retro features tacked on.
+    """
     res = (info['brain_info'].visual_observations[0][0, :, :, :] * 255).astype(np.uint8)
     res[:20] = np.array(Image.fromarray(obs).resize((168, 168)))[:20]
     return res
 
 
 def create_batched_env(num_envs, start=0, **kwargs):
+    """
+    A helper function to create a batch of environments.
+
+    Args:
+        num_envs: size of the batch.
+        start: the starting worker index number.
+        kwargs: passed to create_single_env().
+    """
     env_fns = [lambda i=i: create_single_env(i + start, **kwargs) for i in range(num_envs)]
     return BatchedGymEnv(gym.spaces.Discrete(NUM_ACTIONS),
                          gym.spaces.Box(low=0, high=0xff,
@@ -30,6 +48,22 @@ def create_batched_env(num_envs, start=0, **kwargs):
 
 
 def create_single_env(idx, clear=True, augment=False, rand_floors=None):
+    """
+    Create a single, wrapped environment.
+
+    Args:
+        idx: the ML-Agents worker index to use.
+        clear: erase most of the info dictionary.
+          This saves memory when training, since the
+          rollouts store the entire info dict. By default,
+          the dict contains a large observation, which
+          takes up a lot of memory.
+        augment: wrap the environment so that data
+          augmentation is used.
+        rand_floors: if specified, this is a tuple
+          (min, max) indicating that starting floors
+          should be sampled in the range [min, max).
+    """
     env = TimeRewardEnv(os.environ['OBS_TOWER_PATH'], worker_id=idx)
     if clear:
         env = ClearInfoEnv(env)
@@ -43,6 +77,10 @@ def create_single_env(idx, clear=True, augment=False, rand_floors=None):
 
 
 def log_floors(rollout):
+    """
+    For all the completed episodes in a rollout, print to
+    standard output the attained floor numbers.
+    """
     for t in range(1, rollout.num_steps):
         for b in range(rollout.batch_size):
             if rollout.dones[t, b]:
@@ -55,12 +93,19 @@ def log_floors(rollout):
 
 
 def mirror_obs(obs):
+    """
+    Mirror an observation, not including the time and key
+    bars.
+    """
     obs = obs.copy()
     obs[10:] = obs[10:, ::-1]
     return obs
 
 
 def mirror_action(act):
+    """
+    Mirror an action, swapping left/right.
+    """
     direction = (act % 18) // 6
     act -= direction * 6
     if direction == 1:
@@ -72,11 +117,23 @@ def mirror_action(act):
 
 
 def atomic_save(obj, path):
+    """
+    Save a model to a file, making sure that the file will
+    never be partly written.
+
+    This prevents the model from getting corrupted in the
+    event that the process dies or the machine crashes.
+    """
     torch.save(obj, path + '.tmp')
     os.rename(path + '.tmp', path)
 
 
 class Augmentation:
+    """
+    A collection of settings indicating how to slightly
+    modify an image.
+    """
+
     def __init__(self):
         self.brightness = random.random() * 0.1 + 0.95
         self.contrast = random.random() * 0.1 + 0.95
@@ -102,6 +159,10 @@ class Augmentation:
 
 
 class LogRoller(Roller):
+    """
+    A Roller that logs floors after every rollout.
+    """
+
     def rollout(self):
         result = super().rollout()
         log_floors(result)
@@ -109,6 +170,16 @@ class LogRoller(Roller):
 
 
 class TimeRewardEnv(ObstacleTowerEnv):
+    """
+    An environment that adds rewards to the info dict's
+    'extra_reward' key whenever the agent gets a time orb.
+
+    This does not add rewards directly because the
+    recorded demonstrations do not track these rewards, so
+    the cloned policy is not used to seeing these rewards
+    in the state stacks.
+    """
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.last_time = None
@@ -131,6 +202,10 @@ class TimeRewardEnv(ObstacleTowerEnv):
 
 
 class AugmentEnv(gym.Wrapper):
+    """
+    An environment wrapper that applies data augmentation.
+    """
+
     def __init__(self, env):
         super().__init__(env)
         self.augmentation = None
@@ -147,6 +222,11 @@ class AugmentEnv(gym.Wrapper):
 
 
 class ClearInfoEnv(gym.Wrapper):
+    """
+    An environment wrapper that deletes most information
+    from info dicts to save memory.
+    """
+
     def __init__(self, env):
         super().__init__(env)
 
@@ -164,6 +244,11 @@ class ClearInfoEnv(gym.Wrapper):
 
 
 class HumanActionEnv(gym.ActionWrapper):
+    """
+    An environment wrapper that limits the action space to
+    looking left/right, jumping, and moving forward.
+    """
+
     def __init__(self, env):
         super().__init__(env)
         self.actions = HUMAN_ACTIONS
@@ -174,6 +259,11 @@ class HumanActionEnv(gym.ActionWrapper):
 
 
 class RandomFloorEnv(gym.Wrapper):
+    """
+    An environment wrapper that selects random starting
+    floors in a certain range.
+    """
+
     def __init__(self, env, floors):
         super().__init__(env)
         self.floors = floors

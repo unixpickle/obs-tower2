@@ -1,3 +1,22 @@
+"""
+Core implementation of the state (i.e. "memory") system
+used by the agent.
+
+This agent does not use recurrence or any learned
+connectivity pattern to decide what to remember or attend
+to in the past. Rather, every frame generates a state
+vector, and the previous STATE_STACK state vectors are fed
+into the agent at every timestep. The state vectors do
+include output from a neural network classifier, but this
+network is not trained as part of the agent--rather, it is
+pre-trained on hand-labeled images.
+
+Since the agent does not learn the state representation,
+we can consider the states to be part of the environment.
+Instead of returning plain observations, the augmented
+environments return tuples of (state_stack, observation).
+"""
+
 import gym
 import numpy as np
 import torch
@@ -8,6 +27,11 @@ from .model import StateClassifier
 
 
 class StateEnv(gym.Wrapper):
+    """
+    StateEnv is a single environment wrapper that adds
+    state features as part of its observations.
+    """
+
     def __init__(self, env, state_features=None):
         super().__init__(env)
         self.state_features = state_features or StateFeatures()
@@ -34,6 +58,15 @@ class StateEnv(gym.Wrapper):
 
 
 class BatchedStateEnv(BatchedWrapper):
+    """
+    BatchedStateEnv wraps a BatchedEnv and adds state
+    features to all the observations.
+
+    This is more efficient than using a batch of StateEnv
+    instances, since the classifier can be run on all of
+    the observations in a single batch.
+    """
+
     def __init__(self, env, state_features=None):
         super().__init__(env)
         self.state_features = state_features or StateFeatures()
@@ -65,6 +98,11 @@ class BatchedStateEnv(BatchedWrapper):
 
 
 class StateFeatures:
+    """
+    Generate the part of state vectors that reflect the
+    observation. This does not include rewards or actions.
+    """
+
     def __init__(self, path='save_classifier.pkl'):
         self.classifier = StateClassifier()
         self.classifier.load_state_dict(torch.load(path))

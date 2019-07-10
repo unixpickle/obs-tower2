@@ -1,3 +1,8 @@
+"""
+Tools for processing recording data from human
+demonstrators.
+"""
+
 import json
 import os
 import random
@@ -18,6 +23,18 @@ def load_all_data(**kwargs):
 
 def load_data(dirpaths=(os.environ['OBS_TOWER_RECORDINGS'],),
               augment=False):
+    """
+    Load training and test recordings from disk.
+
+    Args:
+        dirpaths: a sequence of directories where
+          recordings are stored.
+        augment: if True, the resulting recordings will
+          include mirrored versions of every recording on
+          disk, and will have their augment flags enabled.
+          This flag affects how the recordings sample
+          observations.
+    """
     training = []
     testing = []
     for dirpath in dirpaths:
@@ -44,6 +61,9 @@ def truncate_recordings(recordings, max_floor, min_length=300):
     Truncate the recordings so that they never exceed a
     given floor.
 
+    This can be used, for example, to train an agent to
+    solve the beginning of every level.
+
     Args:
         recordings: a list of Recordings.
         max_floor: the floor which no recording should get
@@ -65,6 +85,10 @@ def truncate_recordings(recordings, max_floor, min_length=300):
 
 
 def sample_recordings(recordings, count):
+    """
+    Sample recordings such that recordings are weighted in
+    proportion to their number of frames.
+    """
     weights = np.array([rec.num_steps for rec in recordings], dtype=np.float)
     weights /= np.sum(weights)
     return [recordings[np.random.choice(len(recordings), p=weights)] for _ in range(count)]
@@ -73,6 +97,13 @@ def sample_recordings(recordings, count):
 def recording_rollout(recordings, batch, horizon, state_features):
     """
     Create a rollout of segments from recordings.
+
+    Args:
+        recordings: a sequence of recordings.
+        batch: the number of segments to generate.
+        horizon: the number of timesteps per segment.
+        state_features: a StateFeatures instance to
+          generate states for all of the observations.
     """
     assert all([rec.num_steps > horizon for rec in recordings])
     rollout = Rollout(states=np.zeros([horizon + 1, batch, STATE_STACK, STATE_SIZE],
@@ -96,6 +127,21 @@ def recording_rollout(recordings, batch, horizon, state_features):
 
 
 class Recording:
+    """
+    An object that represents a single recording of an
+    agent playing obstacle tower.
+
+    Recordings are stored on disk as a directory of frame
+    images and several metadata JSON files.
+
+    Args:
+        path: the directory path of the recording.
+        augment: if True, frames will be augmented so long
+          as sample_augmentation() has been called.
+        mirrored: if True, all observations are actions
+          are flipped from left to right.
+    """
+
     def __init__(self, path, augment=False, mirrored=False):
         if path.endswith('/'):
             path = path[:-1]
@@ -114,20 +160,56 @@ class Recording:
             self.actions = [mirror_action(a) for a in self.actions]
 
     def sample_augmentation(self):
+        """
+        Change the augmentation settings that are used for
+        loaded frames.
+
+        This is used to ensure that augmentation settings
+        are the same throughout a synthetic rollout, but
+        re-sampled across synthetic rollouts.
+
+        This only has an effect if the augment flag was
+        True when creating this recording.
+        """
         self.augmentation = Augmentation()
 
     def mirror(self):
+        """
+        Copy this recording, but flip it left-to-right.
+        """
         return Recording(self.path, augment=self.augment, mirrored=not self.mirrored)
 
     @property
     def num_steps(self):
+        """
+        Get the number of timesteps in the recording.
+        """
         return len(self.actions)
 
     @property
     def num_floors(self):
-        return sum(x == 1 for x in self.rewards)
+        """
+        Get the number of floors the agent passed in the
+        recording.
+        """
+        return sum(x > 0.99 for x in self.rewards)
 
     def obses_and_states(self, t0, count, state_features):
+        """
+        Generate a batch of observations and state stacks
+        for a range of timesteps in this recording.
+
+        Args:
+            t0: the first timestep to look at.
+            count: the number of timesteps to look at.
+            state_features: a StateFeatures instance.
+
+        Returns:
+            A tuple (observations, states):
+              observations: a [count x H x W x D] array.
+              states: a [count x stack x size] array of
+                state stacks.
+        """
         start_time = min(t0 - FRAME_STACK + 1, t0 - STATE_STACK + 1)
         frames = np.array([self.load_frame(i) for i in range(start_time, t0 + count)])
         features = state_features.features(frames)
@@ -141,6 +223,10 @@ class Recording:
         return np.array(obses), np.array(states)
 
     def raw_state(self, timestep, features):
+        """
+        Compute the instantaneous state vector for a given
+        timestep, given existing classifier outputs.
+        """
         if timestep < 0:
             return [0.0] * STATE_SIZE
         res = [0.0] * (STATE_SIZE - len(features)) + list(features)
@@ -150,6 +236,10 @@ class Recording:
         return res
 
     def load_frame(self, idx):
+        """
+        Load an array for the frame image at the given
+        timestep index.
+        """
         if idx < 0:
             idx = 0
         img = Image.open(os.path.join(self.path, '%d.png' % idx))
@@ -160,6 +250,9 @@ class Recording:
         return np.array(img)
 
     def truncate(self, max_floor):
+        """
+        Truncate the recording to a maximum floor number.
+        """
         num_steps = 0
         floor = self.floor
         for rew in self.rewards:
