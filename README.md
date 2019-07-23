@@ -25,22 +25,6 @@ The agent itself is a feedforward model; it contains no recurrent connections. T
 
 During behavior cloning and fine-tuning, the agent has little control over what features it can remember from the past. All it has access to is what I thought would be important (e.g. whether or not a box was on the screen). This has obvious drawbacks, but it also has the advantage that the agent will definitely have access to important information. In practice, I found that using an RNN model was not nearly as effective as hand-crafting the agent's memory.
 
-## Step-by-step
-
-Here are the steps taken to train the agent:
-
- 1. The human creates **recordings** by playing the game manually.
- 2. The human uses the **recordings** to create **labeled images** by classifying images manually.
- 3. The **recordings** and **labeled images** are used to train a **classifier**.
- 4. The **recordings** and **classifier** are used to train a **cloned prior**.
- 5. The **cloned prior**, **classifier**, and **environment** are used to train the **agent**.
-
-## Diagram
-
-The following diagram visually depicts the step-by-step procedure described above:
-
-![Overview Diagram](overview_diagram.svg)
-
 ## Codebase overview
 
 This codebase has several components:
