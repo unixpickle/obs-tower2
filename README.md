@@ -50,7 +50,7 @@ Next, configure your environment variables. The scripts depend on a few environm
 
 ## Getting data
 
-If you don't have a directory of labeled images or recordings, you can create an empty directory. However, the training scripts require that you have some data, and the agent will not learn well unless you give it a lot of hand-labeled and human-recorded data. You can either hand-generate the data yourself, or download all of the data I created myself.
+If you don't have a directory of labeled images or recordings, you can create an empty directory. However, the training scripts require that you have some data, and the agent will not learn well unless you give it a lot of hand-labeled and human-recorded data. You can either hand-generate the data yourself, or [download all of the data I created myself](http://obstower.aqnichol.com/).
 
 To record data yourself, see the scripts [recorder/record.py](obs_tower2/recorder/record.py) and [labeler/main.py](obs_tower2/labeler/main.py), which help you record demonstrations and label images, respectively. The recorder uses a pyglet UI to record demonstrations. The labeler is a web application that loads images from the recordings and lets you check off which classes they contain. The labeler also supports keyboard inputs, making it possible for an expert labeler to hit rates of anywhere from 20 to 40 labels per minute.
 
